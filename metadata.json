@@ -1,0 +1,6 @@
+{
+  "name": "Saudi Heart Association",
+  "description": "Official cardiovascular medical society portal for the Saudi Heart Association: clinical practice guidelines, National CPR Committee training, JSHA research, and annual scientific congress.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
