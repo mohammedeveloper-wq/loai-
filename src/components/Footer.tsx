@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { CheckCircle2, Mail, MapPin, Phone } from 'lucide-react';
 import { Language, UI_COPY } from '../data/shaData';
+import { subscribeNewsletter } from '../lib/shaSupabaseService';
 
 interface FooterProps {
   lang: Language;
@@ -11,8 +12,9 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
   const [digestEmail, setDigestEmail] = useState('');
   const [digestError, setDigestError] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
-  const handleSubscribe = (e: FormEvent) => {
+  const handleSubscribe = async (e: FormEvent) => {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(digestEmail.trim())) {
       setDigestError(
@@ -21,8 +23,16 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
       return;
     }
     setDigestError('');
-    setSubscribed(true);
-    setDigestEmail('');
+    setIsSubscribing(true);
+    try {
+      await subscribeNewsletter(digestEmail);
+      setSubscribed(true);
+      setDigestEmail('');
+    } catch (err) {
+      setDigestError(err instanceof Error ? err.message : 'Unable to subscribe.');
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   return (
@@ -157,9 +167,16 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    disabled={isSubscribing}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                   >
-                    {lang === 'en' ? 'Subscribe' : 'اشتراك'}
+                    {isSubscribing
+                      ? lang === 'en'
+                        ? 'Saving...'
+                        : 'جاري الحفظ...'
+                      : lang === 'en'
+                      ? 'Subscribe'
+                      : 'اشتراك'}
                   </button>
                 </div>
                 {digestError && <p className="text-xs text-rose-400">{digestError}</p>}

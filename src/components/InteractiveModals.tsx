@@ -10,6 +10,12 @@ import {
   TrainingCenter,
   TrainingCourse,
 } from '../data/shaData';
+import {
+  signInMemberWithEmail,
+  submitCongressRegistration,
+  submitCourseReservation,
+  submitMembershipApplication,
+} from '../lib/shaSupabaseService';
 
 export type ActiveModal =
   | { type: 'portal'; preselectedTier?: MembershipTier }
@@ -36,11 +42,13 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
   const [delegatePass, setDelegatePass] = useState('physician');
   const [formError, setFormError] = useState('');
   const [submittedMessage, setSubmittedMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedCitation, setCopiedCitation] = useState(false);
 
   useEffect(() => {
     setFormError('');
     setSubmittedMessage('');
+    setIsSubmitting(false);
     setCopiedCitation(false);
     if (modal?.type === 'portal' && modal.preselectedTier) {
       setPortalMode('apply');
@@ -61,7 +69,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
 
   const validateEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
-  const handlePortalSubmit = (e: FormEvent) => {
+  const handlePortalSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       setFormError(
@@ -78,18 +86,42 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
       return;
     }
     setFormError('');
-    setSubmittedMessage(
-      portalMode === 'signin'
-        ? lang === 'en'
-          ? `A one-time member portal access link has been sent to ${email}.`
-          : `تم إرسال رابط الدخول الموحد لبوابة الأعضاء إلى ${email}.`
-        : lang === 'en'
-        ? `Application received for ${fullName}. Your SCFHS verification reference is SHA-MEM-2026-904.`
-        : `تم استلام طلب العضوية للزميل ${fullName}. الرقم المرجعي للمتابعة: SHA-MEM-2026-904.`
-    );
+    setIsSubmitting(true);
+
+    try {
+      if (portalMode === 'signin') {
+        const result = await signInMemberWithEmail(email);
+        if (!result.sent) {
+          setFormError(result.errorMessage ?? 'Unable to send portal link.');
+          return;
+        }
+        setSubmittedMessage(
+          lang === 'en'
+            ? `A one-time member portal access link has been sent to ${email}.`
+            : `تم إرسال رابط الدخول الموحد لبوابة الأعضاء إلى ${email}.`
+        );
+      } else {
+        const result = await submitMembershipApplication({
+          tierId: selectedTierId,
+          fullName,
+          scfhsId,
+          institution,
+          email,
+        });
+        setSubmittedMessage(
+          lang === 'en'
+            ? `Application received for ${fullName}. Reference: ${result.referenceId}.`
+            : `تم استلام طلب العضوية للزميل ${fullName}. الرقم المرجعي للمتابعة: ${result.referenceId}.`
+        );
+      }
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Unable to submit request.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleCongressSubmit = (e: FormEvent) => {
+  const handleCongressSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !validateEmail(email)) {
       setFormError(
@@ -100,14 +132,27 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
       return;
     }
     setFormError('');
-    setSubmittedMessage(
-      lang === 'en'
-        ? `SHA37 Delegate Seat Reserved for ${fullName}. Confirmation & CME barcode dispatched to ${email}.`
-        : `تم حجز مقعد المؤتمر SHA37 باسم ${fullName} وإرسال التذكرة ورمز الساعات المعتمدة إلى ${email}.`
-    );
+    setIsSubmitting(true);
+
+    try {
+      const result = await submitCongressRegistration({
+        delegatePass,
+        fullName,
+        email,
+      });
+      setSubmittedMessage(
+        lang === 'en'
+          ? `SHA37 Delegate Seat Reserved (${result.referenceId}) for ${fullName}. Confirmation dispatched to ${email}.`
+          : `تم حجز مقعد المؤتمر SHA37 (${result.referenceId}) باسم ${fullName} وإرسال التذكرة إلى ${email}.`
+      );
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Unable to register for SHA37.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleCourseSubmit = (e: FormEvent) => {
+  const handleCourseSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !validateEmail(email)) {
       setFormError(
@@ -117,13 +162,28 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
       );
       return;
     }
+    if (modal.type !== 'course') return;
     setFormError('');
-    if (modal.type === 'course') {
+    setIsSubmitting(true);
+
+    try {
+      const result = await submitCourseReservation({
+        courseCode: modal.course.code,
+        centerCode: modal.center.accreditationCode,
+        centerName: modal.center.name.en,
+        sessionDate: modal.center.nextSession,
+        traineeName: fullName,
+        email,
+      });
       setSubmittedMessage(
         lang === 'en'
-          ? `Seat confirmed for ${modal.course.code} at ${modal.center.name.en} (${modal.center.nextSession}).`
-          : `تم تأكيد حجز المقعد لدورة ${modal.course.code} في ${modal.center.name.ar}.`
+          ? `Seat confirmed (${result.referenceId}) for ${modal.course.code} at ${modal.center.name.en} (${modal.center.nextSession}).`
+          : `تم تأكيد حجز المقعد (${result.referenceId}) لدورة ${modal.course.code} في ${modal.center.name.ar}.`
       );
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Unable to reserve seat.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -334,9 +394,14 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg cursor-pointer"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer"
                   >
-                    {portalMode === 'apply'
+                    {isSubmitting
+                      ? lang === 'en'
+                        ? 'Submitting...'
+                        : 'جاري الإرسال...'
+                      : portalMode === 'apply'
                       ? lang === 'en'
                         ? 'Submit Application'
                         : 'إرسال طلب العضوية'
@@ -432,9 +497,16 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg cursor-pointer"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer"
                   >
-                    {lang === 'en' ? 'Confirm Registration' : 'تأكيد التسجيل'}
+                    {isSubmitting
+                      ? lang === 'en'
+                        ? 'Registering...'
+                        : 'جاري التسجيل...'
+                      : lang === 'en'
+                      ? 'Confirm Registration'
+                      : 'تأكيد التسجيل'}
                   </button>
                 </div>
               </form>
@@ -496,9 +568,16 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg cursor-pointer"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer"
                   >
-                    {lang === 'en' ? 'Reserve Seat' : 'تأكيد الحجز'}
+                    {isSubmitting
+                      ? lang === 'en'
+                        ? 'Reserving...'
+                        : 'جاري الحجز...'
+                      : lang === 'en'
+                      ? 'Reserve Seat'
+                      : 'تأكيد الحجز'}
                   </button>
                 </div>
               </form>

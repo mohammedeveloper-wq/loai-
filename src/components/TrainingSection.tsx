@@ -11,6 +11,7 @@ import {
   TrainingCourse,
   UI_COPY,
 } from '../data/shaData';
+import { verifyNcprCertificate } from '../lib/shaSupabaseService';
 import { ResilientImage } from './ResilientImage';
 
 interface TrainingSectionProps {
@@ -28,6 +29,7 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
   const [certQuery, setCertQuery] = useState('SHA-NCPR-2026-8841');
   const [verifiedCert, setVerifiedCert] = useState<CertificateRecord | null>(CERTIFICATE_REGISTRY[0]);
   const [certNotFound, setCertNotFound] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const selectedCourse =
     TRAINING_COURSES.find((c) => c.id === selectedCourseId) ?? TRAINING_COURSES[0];
@@ -47,16 +49,20 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
     { key: 'madinah', label: { en: 'Madinah', ar: 'المدينة' } },
   ];
 
-  const handleVerifySubmit = (e: FormEvent) => {
+  const handleVerifySubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const normalized = certQuery.trim().toUpperCase();
-    const match = CERTIFICATE_REGISTRY.find((r) => r.id.toUpperCase() === normalized);
-    if (match) {
-      setVerifiedCert(match);
-      setCertNotFound(false);
-    } else {
-      setVerifiedCert(null);
-      setCertNotFound(true);
+    setIsVerifying(true);
+    try {
+      const match = await verifyNcprCertificate(certQuery);
+      if (match) {
+        setVerifiedCert(match);
+        setCertNotFound(false);
+      } else {
+        setVerifiedCert(null);
+        setCertNotFound(true);
+      }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -281,10 +287,19 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
                 />
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  disabled={isVerifying}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-60 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Search className="w-3.5 h-3.5" />
-                  <span>{lang === 'en' ? 'Verify' : 'تحقق'}</span>
+                  <span>
+                    {isVerifying
+                      ? lang === 'en'
+                        ? 'Checking...'
+                        : 'جاري التحقق...'
+                      : lang === 'en'
+                      ? 'Verify'
+                      : 'تحقق'}
+                  </span>
                 </button>
               </div>
 
