@@ -8,7 +8,7 @@ export interface BilingualText {
 export interface GuidelineItem {
   id: string;
   code: string;
-  category: 'coronary' | 'heart-failure' | 'prevention' | 'electrophysiology';
+  category: 'debriefing' | 'insitu' | 'sp-osce' | 'operations';
   categoryLabel: BilingualText;
   year: string;
   pages: number;
@@ -33,11 +33,12 @@ export interface WorkingGroup {
 }
 
 export interface TrainingCourse {
-  id: 'BLS' | 'ACLS' | 'PALS' | 'NRP' | 'HEARTSAVER';
+  id: 'SIM-FAC' | 'SIM-OPS' | 'INSITU' | 'SP-EDUC' | 'CRM-ACLS';
   code: string;
   title: BilingualText;
   duration: BilingualText;
   cmeHours: number;
+  feeSar: number;
   validity: BilingualText;
   audience: BilingualText;
   description: BilingualText;
@@ -49,7 +50,7 @@ export interface TrainingCenter {
   regionLabel: BilingualText;
   city: BilingualText;
   name: BilingualText;
-  courses: ('BLS' | 'ACLS' | 'PALS' | 'NRP' | 'HEARTSAVER')[];
+  courses: ('SIM-FAC' | 'SIM-OPS' | 'INSITU' | 'SP-EDUC' | 'CRM-ACLS')[];
   nextSession: string;
   seatsAvailable: number;
   accreditationCode: string;
@@ -108,7 +109,7 @@ export interface MembershipTier {
   benefits: BilingualText[];
 }
 
-export interface PatientGuide {
+export interface LabGuide {
   id: string;
   topic: BilingualText;
   readingTime: string;
@@ -117,230 +118,236 @@ export interface PatientGuide {
   keySteps: BilingualText[];
 }
 
-export const HERO_IMAGE = '/src/assets/images/hero_cardiology_riyadh_1794942410135.jpg';
+export const HERO_IMAGE = '/src/assets/images/hero_healthcare_simulation_1794948999532.jpg';
 export const TRAINING_IMAGE = '/src/assets/images/training_cpr_simulation_1794942410441.jpg';
 export const CONFERENCE_IMAGE = '/src/assets/images/conference_sha_symposium_1794942412971.jpg';
-export const JOURNAL_IMAGE = '/src/assets/images/research_jsha_editorial_1794942411955.jpg';
+export const JOURNAL_IMAGE = '/src/assets/images/simulation_debrief_lab_1794948999603.jpg';
 
 export const UI_COPY = {
-  brand: { en: 'Saudi Heart Association', ar: 'الجمعية السعودية للقلب' },
+  brand: {
+    en: 'Saudi Simulation Society',
+    ar: 'الجمعية السعودية للمحاكاة الصحية',
+  },
   nav: {
     about: { en: 'About', ar: 'عن الجمعية' },
-    guidelines: { en: 'Guidelines', ar: 'الأدلة السريرية' },
-    training: { en: 'CPR Training', ar: 'التدريب والإنعاش' },
-    congress: { en: 'Congress', ar: 'المؤتمر السنوي' },
-    journal: { en: 'Journal', ar: 'المجلة العلمية' },
-    portal: { en: 'Member Portal', ar: 'بوابة الأعضاء' },
+    guidelines: { en: 'Standards', ar: 'المعايير العلمية' },
+    training: { en: 'Courses', ar: 'التسجيل والدورات' },
+    congress: { en: 'Forum', ar: 'الملتقى السنوي' },
+    journal: { en: 'Journal', ar: 'الأبحاث' },
+    portal: { en: 'Payment & Portal', ar: 'البوابة والدفع' },
   },
   hero: {
     eyebrow: {
-      en: 'Established 1989 · Riyadh, Kingdom of Saudi Arabia · SCFHS Accredited',
-      ar: 'تأسست ١٩٨٩ · الرياض، المملكة العربية السعودية · معتمدة من الهيئة السعودية للتخصصات الصحية',
+      en: 'Saudi Society for Simulation in Healthcare (SSSH) · Riyadh · SCFHS Accredited',
+      ar: 'الجمعية السعودية للمحاكاة الصحية · الرياض · معتمدة من الهيئة السعودية للتخصصات الصحية',
     },
     headline: {
-      en: 'Advancing Cardiovascular Science & Heart Health Across the Kingdom',
-      ar: 'الارتقاء بعلوم القلب والأوعية الدموية وصحة القلب في أنحاء المملكة',
+      en: 'Advancing Healthcare Simulation, Clinical Training & Patient Safety',
+      ar: 'الارتقاء بالمحاكاة الصحية والتدريب السريري وسلامة المرضى في المملكة',
     },
     subheadline: {
-      en: 'The national scientific authority uniting cardiologists, cardiac surgeons, researchers, and life-support educators to set evidence-based clinical standards aligned with Vision 2030.',
-      ar: 'المرجعية العلمية الوطنية التي تجمع أطباء وجراحي القلب والباحثين ومدربي دعم الحياة لوضع المعايير السريرية المبنية على البراهين وفق مستهدفات رؤية ٢٠٣٠.',
+      en: 'The national society uniting simulation educators, clinical faculty, and operations specialists across accredited hospital simulation centers—offering certified courses, standards, and online registration & payment.',
+      ar: 'الجمعية الوطنية التي تجمع ممارسي المحاكاة الصحية وأعضاء هيئة التدريس وفنيي التشغيل عبر مراكز المحاكاة المعتمدة، مع برامج تدريبية وبوابة تسجيل ودفع إلكتروني متكاملة.',
     },
-    primaryCta: { en: 'Register for SHA37 Congress', ar: 'التسجيل في مؤتمر SHA37' },
-    secondaryCta: { en: 'Explore Clinical Guidelines', ar: 'تصفح الأدلة السريرية' },
+    primaryCta: { en: 'Browse & Register Courses', ar: 'التسجيل والدفع للدورات' },
+    secondaryCta: { en: 'Open Payment Portal', ar: 'بوابة الدفع والفواتير' },
     imageCaption: {
-      en: 'Fig. 1 — Cardiovascular Research & Education Atrium, Riyadh Medical Corridor',
-      ar: 'شكل ١ — بهو أبحاث وتعليم أمراض القلب، الممر الطبي بالرياض',
+      en: 'Fig. 1 — High-Fidelity Clinical Simulation Suite, Riyadh Academic Medical Center',
+      ar: 'شكل ١ — جناح المحاكاة السريرية عالية الدقة، المركز الطبي الأكاديمي بالرياض',
     },
     kpis: [
-      { value: '1989', label: { en: 'Founded at King Saud University', ar: 'تأسست في جامعة الملك سعود' } },
-      { value: '4,850+', label: { en: 'Active Fellows & Members', ar: 'عضو وزميل نشط' } },
-      { value: '142', label: { en: 'Accredited NCPR Centers', ar: 'مركز معتمد للإنعاش القلبي' } },
-      { value: '24', label: { en: 'SCFHS CME Hours at SHA37', ar: 'ساعة تعليم طبي مستمر في SHA37' } },
+      { value: '2013', label: { en: 'National Society Established', ar: 'تأسيس الجمعية الوطنية' } },
+      { value: '3,400+', label: { en: 'Certified Simulation Educators', ar: 'ممارس ومدرب محاكاة معتمد' } },
+      { value: '68', label: { en: 'Accredited Simulation Centers', ar: 'مركز محاكاة صحي معتمد' } },
+      { value: '30', label: { en: 'SCFHS CME Hours at Forum', ar: 'ساعة تعليم طبي مستمر في الملتقى' } },
     ],
   },
   sections: {
-    guidelinesTitle: { en: 'Clinical Practice Guidelines & Working Groups', ar: 'الأدلة السريرية والمجموعات العلمية' },
+    guidelinesTitle: {
+      en: 'Simulation Standards & Special Interest Groups',
+      ar: 'معايير الممارسة الفضلى والمجموعات التخصصية',
+    },
     guidelinesSubtitle: {
-      en: 'Evidence-based consensus documents tailored to Saudi and regional cardiovascular epidemiology, updated continuously by national sub-specialty taskforces.',
-      ar: 'توصيات سريرية مبنية على البراهين ومصممة لخصائص أمراض القلب في المملكة والمنطقة، تحدثها اللجان التخصصية الوطنية.',
+      en: 'Peer-reviewed healthcare simulation standards for scenario design, structured debriefing, standardized patients, and in-situ hospital safety testing.',
+      ar: 'معايير علمية محكمة لتصميم سيناريوهات المحاكاة، واستخلاص المعلومات المنظم، والمرضى المعياريين، واختبارات السلامة داخل المستشفيات.',
     },
-    workingGroupsTitle: { en: 'Scientific Working Groups', ar: 'المجموعات العلمية التخصصية' },
-    trainingTitle: { en: 'National CPR Committee (NCPR)', ar: 'اللجنة الوطنية للإنعاش القلبي الرئوي' },
+    workingGroupsTitle: { en: 'Special Interest Groups (SIGs)', ar: 'المجموعات العلمية التخصصية' },
+    trainingTitle: {
+      en: 'Course Registration & Accredited Simulation Centers',
+      ar: 'التسجيل في الدورات ومراكز المحاكاة المعتمدة',
+    },
     trainingSubtitle: {
-      en: 'Standardized life-support certification across 142 accredited hospital training centers, overseen via the official shacpr.org.sa registry.',
-      ar: 'شهادات دعم الحياة المعتمدة عبر ١٤٢ مركز تدريب مستشفوي في جميع مناطق المملكة، بإشراف السجل الرسمي shacpr.org.sa.',
+      en: 'Select an SCFHS-accredited simulation course, pick your regional center, and complete registration with instant online payment or SADAD invoice generation.',
+      ar: 'اختر الدورة المعتمدة، وحدد مركز المحاكاة في منطقتك، وأتمم التسجيل والدفع الإلكتروني أو إصدار فاتورة سداد فوراً.',
     },
-    congressTitle: { en: '37th Annual Scientific Congress — SHA37', ar: 'المؤتمر العلمي السنوي السابع والثلاثون — SHA37' },
+    congressTitle: {
+      en: '12th Annual Healthcare Simulation Forum — SSSH27',
+      ar: 'الملتقى السنوي الثاني عشر للمحاكاة الصحية — SSSH27',
+    },
     congressSubtitle: {
-      en: 'March 25–27, 2027 · Crowne Plaza RDC, Riyadh · Theme: Global Heart: From Riyadh to the World',
-      ar: '٢٥–٢٧ مارس ٢٠٢٧ · كراون بلازا المدينة الرقمية، الرياض · الشعار: قلب عالمي: من الرياض إلى العالم',
+      en: 'February 16–18, 2027 · Riyadh · Theme: Next-Generation Simulation, AI Scenarios & Zero Preventable Harm',
+      ar: '١٦–١٨ فبراير ٢٠٢٧ · الرياض · الشعار: الجيل القادم من المحاكاة الصحية وسلامة المرضى',
     },
-    journalTitle: { en: 'Journal of the Saudi Heart Association (JSHA)', ar: 'مجلة الجمعية السعودية للقلب (JSHA)' },
+    journalTitle: {
+      en: 'Saudi Journal of Healthcare Simulation (SJHS)',
+      ar: 'المجلة السعودية للمحاكاة الصحية (SJHS)',
+    },
     journalSubtitle: {
-      en: 'Peer-reviewed open-access quarterly publishing regional clinical registries, consensus statements, and original cardiovascular investigations.',
-      ar: 'دورية علمية محكمة متاحة للوصول المفتوح تنشر السجلات القلبية الإقليمية والبيانات التوافقية والأبحاث السريرية الأصيلة.',
+      en: 'Open-access scholarly publication featuring simulation-based mastery learning trials, OSCE validity studies, and patient safety outcomes.',
+      ar: 'دورية علمية محكمة متاحة للوصول المفتوح تنشر دراسات التعلم بالإتقان القائم على المحاكاة ونتائج سلامة المرضى.',
     },
-    governanceTitle: { en: 'Leadership, Membership & Patient Education', ar: 'مجلس الإدارة، العضوية وتثقيف المرضى' },
+    governanceTitle: {
+      en: 'Board of Directors, Membership & Lab Guides',
+      ar: 'مجلس الإدارة، العضوية وأدلة مراكز المحاكاة',
+    },
     governanceSubtitle: {
-      en: 'Guided by senior cardiovascular leaders across Saudi medical cities, serving practitioners and empowering cardiac patients nationwide.',
-      ar: 'بقيادة نخبة من استشاريي أمراض وجراحة القلب في المدن الطبية السعودية لخدمة الممارسين الصحيين وتوعية المرضى.',
+      en: 'Led by clinical simulation directors across Saudi academic medical cities, supporting institutional lab accreditation and educator fellowships.',
+      ar: 'بقيادة نخبة من مديري مراكز المحاكاة السريرية في المدن الطبية والجامعات السعودية لدعم اعتماد المراكز وتأهيل المدربين.',
     },
   },
 };
 
 export const GUIDELINES: GuidelineItem[] = [
   {
-    id: 'ccs-2026',
-    code: 'SHA-GL-2026-01',
-    category: 'coronary',
-    categoryLabel: { en: 'Coronary & ACS', ar: 'الشرايين التاجية' },
+    id: 'sim-debrief-2026',
+    code: 'SSSH-STD-2026-01',
+    category: 'debriefing',
+    categoryLabel: { en: 'Debriefing & Faculty', ar: 'الاستخلاص والتدريب' },
     year: '2026',
-    pages: 84,
+    pages: 64,
     title: {
-      en: 'Focused Update on Diagnosis and Management of Chronic Coronary Syndromes',
-      ar: 'التحديث المركز لتشخيص وعلاج متلازمات الشريان التاجي المزمنة',
+      en: 'National Standards for Psychological Safety & Structured Clinical Debriefing',
+      ar: 'المعايير الوطنية للأمان النفسي واستخلاص المعلومات السريري المنظم',
     },
     summary: {
-      en: 'Establishes structured pre-test clinical likelihood pathways prioritizing Coronary CT Angiography (CCTA), risk-stratified revascularization, and dual antiplatelet duration protocols for Saudi clinical centers.',
-      ar: 'يحدد مسارات التقييم السريري المسبق مع أولوية التصوير المقطعي للشرايين التاجية (CCTA)، وإعادة التروية المبنية على المخاطر، وبروتوكولات مضادات الصفيحات.',
+      en: 'Defines prebriefing contracts, advocacy-inquiry debriefing scripts, and objective competency rubrics for multidisciplinary healthcare simulation teams.',
+      ar: 'يحدد ميثاق التمهيد المسبق، وأساليب الاستخلاص المبنية على الاستقصاء البناء، ومعايير تقييم الكفاءة للفرق الصحية متعددة التخصصات.',
     },
     taskforce: {
-      en: 'SHA Interventional & Coronary Working Group',
-      ar: 'مجموعة العمل السعودية للقسطرة والشرايين التاجية',
+      en: 'SSSH Faculty Development & Debriefing Committee',
+      ar: 'لجنة تطوير المدربين واستخلاص المعلومات',
     },
-    citation: 'Saudi Heart Association CCS Taskforce. Focused Update on Chronic Coronary Syndromes. J Saudi Heart Assoc. 2026;38(1):12-95.',
+    citation:
+      'Saudi Society for Simulation in Healthcare. National Standards for Structured Clinical Debriefing. SJHS. 2026;11(1):8-71.',
     recommendations: [
       {
-        classLevel: 'Class I',
-        evidence: 'Level A',
+        classLevel: 'Standard I',
+        evidence: 'Core Practice',
         statement: {
-          en: 'Perform Coronary CT Angiography (CCTA) as the primary non-invasive diagnostic test in symptomatic patients with low-to-intermediate clinical likelihood of obstructive CAD.',
-          ar: 'اعتماد التصوير المقطعي للشرايين التاجية (CCTA) كفحص تشخيصي أولي غير جراحي للمرضى ذوي الاحتمالية السريرية المنخفضة إلى المتوسطة.',
+          en: 'Conduct a documented 10-minute prebriefing establishing psychological safety, confidentiality, and fiction contract prior to every clinical scenario.',
+          ar: 'إجراء تمهيد مسبق لمدة ١٠ دقائق يرسخ الأمان النفسي والسرية وميثاق المحاكاة قبل كل سيناريو سريري.',
         },
       },
       {
-        classLevel: 'Class I',
-        evidence: 'Level A',
+        classLevel: 'Standard II',
+        evidence: 'Core Practice',
         statement: {
-          en: 'Initiate high-intensity statin therapy targeting LDL-C < 1.4 mmol/L (55 mg/dL) with early ezetimibe or PCSK9 inhibitor escalation if threshold is unmet at 6 weeks.',
-          ar: 'البدء بعلاج الستاتين عالي الكثافة لتحقيق هدف LDL-C أقل من ١.٤ مليمول/لتر مع إضافة الإيزيتيميب أو مثبطات PCSK9 عند الحاجة.',
-        },
-      },
-      {
-        classLevel: 'Class I',
-        evidence: 'Level B',
-        statement: {
-          en: 'Evaluate multidisciplinary Heart Team consensus prior to left-main or complex multivessel revascularization in patients with diabetes mellitus.',
-          ar: 'مراجعة فريق القلب متعدد التخصصات قبل إعادة تروية الجذع الأيسر أو الشرايين المتعددة لدى مرضى السكري.',
+          en: 'Allocate at least twice the scenario runtime (minimum 2:1 debrief-to-simulation ratio) for structured reaction, analysis, and clinical summary phases.',
+          ar: 'تخصيص ضعف مدة السيناريو على الأقل (نسبة ٢:١) لمراحل استخلاص المعلومات والتحليل والتلخيص السريري.',
         },
       },
     ],
   },
   {
-    id: 'hf-2025',
-    code: 'SHA-GL-2025-04',
-    category: 'heart-failure',
-    categoryLabel: { en: 'Heart Failure', ar: 'قصور القلب' },
+    id: 'sim-insitu-2026',
+    code: 'SSSH-STD-2026-03',
+    category: 'insitu',
+    categoryLabel: { en: 'In-Situ Safety', ar: 'المحاكاة الميدانية' },
+    year: '2026',
+    pages: 52,
+    title: {
+      en: 'In-Situ Hospital Simulation & Latent Safety Threat (LST) Audit Protocol',
+      ar: 'بروتوكول المحاكاة الميدانية داخل المستشفيات ورصد مخاطر السلامة الكامنة',
+    },
+    summary: {
+      en: 'Standardized safety checklist for running unannounced or scheduled mock drills inside live ICU, ED, OR, and obstetrics units without disrupting patient care.',
+      ar: 'قائمة تحقق قياسية لتنفيذ تمارين المحاكاة في أقسام العناية والطوارئ والعمليات دون التأثير على رعاية المرضى الفعليين.',
+    },
+    taskforce: {
+      en: 'SSSH Patient Safety & Hospital Quality Group',
+      ar: 'مجموعة سلامة المرضى وجودة الرعاية الصحية',
+    },
+    citation:
+      'Al-Mansour F, Al-Jasser S, et al. In-Situ Simulation & Latent Safety Threat Identification. SJHS. 2026;11(2):90-141.',
+    recommendations: [
+      {
+        classLevel: 'Standard I',
+        evidence: 'Safety Mandate',
+        statement: {
+          en: 'Label all simulated medications and equipment clearly with high-visibility simulation stickers and verify full restoration of crash carts within 15 minutes post-drill.',
+          ar: 'تمييز جميع أدوية ومستلزمات المحاكاة بملصقات واضحة والتأكد من إعادة جاهزية عربة الطوارئ خلال ١٥ دقيقة.',
+        },
+      },
+      {
+        classLevel: 'Standard II',
+        evidence: 'Quality Audit',
+        statement: {
+          en: 'Log every identified latent safety threat (equipment gap, escalation delay, medication look-alike) into the hospital risk register within 48 hours.',
+          ar: 'توثيق كل خطر سلامة كامن يتم رصده في سجل المخاطر بالمستشفى خلال ٤٨ ساعة للمعالجة التصحيحية.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'sim-sp-2025',
+    code: 'SSSH-STD-2025-05',
+    category: 'sp-osce',
+    categoryLabel: { en: 'SP & OSCE', ar: 'المرضى المعياريون' },
     year: '2025',
-    pages: 112,
+    pages: 78,
     title: {
-      en: 'National Consensus for Acute and Chronic Heart Failure Care Pathways',
-      ar: 'التوافق الوطني لمسارات الرعاية في قصور القلب الحاد والمزمن',
+      en: 'Standardized Patient (SP) Recruitment, Portrayal & High-Stakes OSCE Reliability',
+      ar: 'معايير تأهيل المرضى المعياريين وموثوقية اختبارات OSCE عالية الأهمية',
     },
     summary: {
-      en: 'Rapid quadruple foundational therapy initiation (ARNI/ACEi, Beta-blocker, MRA, SGLT2i) prior to hospital discharge and structured virtual heart failure clinic follow-up within 7 days.',
-      ar: 'البدء السريع بالعلاج الرباعي الأساسي قبل الخروج من المستشفى مع المتابعة عبر عيادات قصور القلب الافتراضية خلال ٧ أيام.',
+      en: 'Evidence-based blueprints for Arabic/English clinical communication stations, SP calibration, inter-rater reliability scoring, and ethical safeguards.',
+      ar: 'إرشادات علمية لمحطات التواصل السريري باللغتين العربية والإنجليزية ومعايرة الأداء وضمان موثوقية التقييم.',
     },
     taskforce: {
-      en: 'Saudi Heart Failure Working Group',
-      ar: 'مجموعة العمل السعودية لقصور القلب',
+      en: 'SSSH Assessment & Standardized Patient Working Group',
+      ar: 'مجموعة التقييم السريري والمرضى المعياريين',
     },
-    citation: 'Al-Ghamdi S, Al-Saif S, et al. SHA National Consensus on Heart Failure Management. J Saudi Heart Assoc. 2025;37(3):188-299.',
+    citation:
+      'Saudi Society for Simulation in Healthcare. Standardized Patient & OSCE Assessment Standards. 2025.',
     recommendations: [
       {
-        classLevel: 'Class I',
-        evidence: 'Level A',
+        classLevel: 'Standard I',
+        evidence: 'Psychometrics',
         statement: {
-          en: 'Initiate SGLT2 inhibitors across the full spectrum of symptomatic heart failure (HFrEF, HFmrEF, HFpEF) regardless of glycemic status.',
-          ar: 'بدء مثبطات SGLT2 عبر جميع طيف قصور القلب المصحوب بأعراض بغض النظر عن حالة السكري.',
-        },
-      },
-      {
-        classLevel: 'Class I',
-        evidence: 'Level A',
-        statement: {
-          en: 'Schedule structured virtual or in-person transitional care follow-up within 7–14 days following any acute decompensated heart failure hospitalization.',
-          ar: 'جدولة متابعة انتقالية منظمة خلال ٧ إلى ١٤ يوماً بعد الخروج من المستشفى لحالات قصور القلب الحاد.',
+          en: 'Require dual-rater calibration workshops achieving >= 0.85 inter-rater agreement prior to high-stakes national residency OSCE examinations.',
+          ar: 'إلزامية ورش معايرة المقيمين لتحقيق توافق لا يقل عن ٠.٨٥ قبل الاختبارات السريرية الوطنية.',
         },
       },
     ],
   },
   {
-    id: 'prev-2025',
-    code: 'SHA-GL-2025-02',
-    category: 'prevention',
-    categoryLabel: { en: 'Prevention & Lipids', ar: 'الوقاية والدهون' },
+    id: 'sim-ops-2025',
+    code: 'SSSH-STD-2025-02',
+    category: 'operations',
+    categoryLabel: { en: 'Operations & Tech', ar: 'التشغيل والتقنية' },
     year: '2025',
-    pages: 96,
+    pages: 68,
     title: {
-      en: 'Saudi Guidelines for Primary & Secondary Cardiovascular Prevention',
-      ar: 'الأدلة السعودية للوقاية الأولية والثانوية من أمراض القلب والأوعية الدموية',
+      en: 'Simulation Center AV Infrastructure, Manikin Maintenance & VR Integration',
+      ar: 'البنية التقنية لمراكز المحاكاة وصيانة الدمى ودمج الواقع الافتراضي',
     },
     summary: {
-      en: 'Regionally calibrated cardiovascular risk scoring accounting for early-onset metabolic syndrome, familial hypercholesterolemia screening, and strict blood pressure targets (<130/80 mmHg).',
-      ar: 'تقييم مخاطر القلب المعاير إقليمياً مع فحص فرط كوليسترول الدم العائلي وأهداف ضغط الدم الصارمة.',
+      en: 'Technical specifications for multi-camera debriefing capture, HL7/telemetry overlays, preventative simulator servicing, and VR headset hygiene.',
+      ar: 'المواصفات الفنية لأنظمة البث والتسجيل متعددة الكاميرات والصيانة الوقائية للدمى وتعقيم نظارات الواقع الافتراضي.',
     },
     taskforce: {
-      en: 'SHA Preventive Cardiology & National Heart Center Joint Panel',
-      ar: 'اللجنة المشتركة للوقاية القلبية والمركز الوطني للقلب',
+      en: 'SSSH Simulation Operations & Engineering SIG',
+      ar: 'مجموعة عمليات المحاكاة والهندسة الطبية',
     },
-    citation: 'Saudi Heart Association & National Heart Center. Primary & Secondary CVD Prevention Guidelines. 2025.',
+    citation:
+      'SSSH Operations Committee. Simulation Center Infrastructure & AV Specifications. SJHS. 2025;10(3):14-81.',
     recommendations: [
       {
-        classLevel: 'Class I',
-        evidence: 'Level B',
+        classLevel: 'Standard I',
+        evidence: 'Technical Spec',
         statement: {
-          en: 'Screen all adults aged 20 years and older with a fasting lipid profile and HbA1c every 3–5 years, or annually if cardiometabolic risk factors are present.',
-          ar: 'إجراء فحص الدهون والسكري التراكمي لجميع البالغين من عمر ٢٠ عاماً فأكثر كل ٣-٥ سنوات أو سنوياً عند وجود عوامل خطورة.',
-        },
-      },
-      {
-        classLevel: 'Class I',
-        evidence: 'Level A',
-        statement: {
-          en: 'Target systolic blood pressure of 120–129 mmHg in treated hypertensive adults without orthostatic intolerance.',
-          ar: 'استهداف ضغط دم انقباضي بين ١٢٠ و١٢٩ ملم زئبق لدى مرضى ارتفاع الضغط القادرين على تحمل العلاج.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'ep-2024',
-    code: 'SHA-GL-2024-06',
-    category: 'electrophysiology',
-    categoryLabel: { en: 'Electrophysiology', ar: 'كهربائية القلب' },
-    year: '2024',
-    pages: 76,
-    title: {
-      en: 'Atrial Fibrillation Anticoagulation & Catheter Ablation Standards',
-      ar: 'معايير مميعات الدم والقسطرة الاستئصالية للرجفان الأذيني',
-    },
-    summary: {
-      en: 'Practical guidance on direct oral anticoagulants (DOACs), early rhythm control via cryoablation or pulsed-field ablation, and device-detected subclinical atrial fibrillation.',
-      ar: 'إرشادات عملية لمميعات الدم الفموية المباشرة والتحكم المبكر بنظم القلب عبر الاستئصال القسطري.',
-    },
-    taskforce: {
-      en: 'Saudi Heart Rhythm Society (SHRS) Working Group',
-      ar: 'مجموعة العمل السعودية لاضطرابات نظم القلب',
-    },
-    citation: 'Saudi Heart Rhythm Society. Atrial Fibrillation Management Standards. J Saudi Heart Assoc. 2024;36(4):301-376.',
-    recommendations: [
-      {
-        classLevel: 'Class I',
-        evidence: 'Level A',
-        statement: {
-          en: 'Prefer DOACs over vitamin K antagonists in eligible patients with non-valvular atrial fibrillation and CHA2DS2-VASc >= 2 (men) or >= 3 (women).',
-          ar: 'تفضيل مميعات الدم الفموية المباشرة على الوارفارين في الرجفان الأذيني غير الصمامي عند ارتفاع مؤشر الخطورة.',
+          en: 'Maintain an automated audiovisual retention and role-based access policy ensuring learner video recordings expire or anonymize within 30 days unless consented.',
+          ar: 'تطبيق سياسة صلاحيات وحفظ آلي للتسجيلات تضمن حذفها أو إخفاء هويتها خلال ٣٠ يوماً ما لم توجد موافقة بحثية.',
         },
       },
     ],
@@ -350,218 +357,301 @@ export const GUIDELINES: GuidelineItem[] = [
 export const WORKING_GROUPS: WorkingGroup[] = [
   {
     index: '01',
-    name: { en: 'Interventional Cardiology & Structural Heart', ar: 'القسطرة التداخلية وأمراض القلب البنيوية' },
-    chair: { en: 'Dr. Fahad Al-Khuwaiter, MD, FACC', ar: 'د. فهد الخويطر' },
-    institution: { en: 'King Faisal Specialist Hospital & Research Centre', ar: 'مستشفى الملك فيصل التخصصي ومركز الأبحاث' },
-    focus: { en: 'Primary PCI network metrics, TAVI registry, and complex CTO proctoring', ar: 'شبكات القسطرة الأولية وسجل الصمام الأورطي' },
-    membersCount: 480,
+    name: { en: 'Clinical Debriefing & Faculty Development', ar: 'استخلاص المعلومات وتطوير المدربين' },
+    chair: { en: 'Dr. Norah Al-Qahtani, MD, CHSE', ar: 'د. نورة القحطاني' },
+    institution: { en: 'King Saud University Clinical Skills & Sim Center', ar: 'مركز المهارات والمحاكاة بجامعة الملك سعود' },
+    focus: { en: 'Debriefing with Good Judgment certification & peer-coaching metrics', ar: 'اعتماد مدربي الاستخلاص ومؤشرات التقييم الأقراني' },
+    membersCount: 540,
   },
   {
     index: '02',
-    name: { en: 'Heart Failure & Cardiac Transplantation', ar: 'قصور القلب وزراعة القلب' },
-    chair: { en: 'Dr. Noura Al-Harbi, MD, FESC', ar: 'د. نورة الحربي' },
-    institution: { en: 'King Abdulaziz Cardiac Center, Riyadh', ar: 'مركز الملك عبدالعزيز للقلب، الرياض' },
-    focus: { en: 'National GDMT titration audits and mechanical circulatory support pathways', ar: 'تدقيق العلاج الدوائي ومسارات الدعم الميكانيكي للدورة الدموية' },
-    membersCount: 365,
+    name: { en: 'Surgical, Endoscopic & Procedural Simulation', ar: 'محاكاة الجراحة والمناظير والمهارات الإجرائية' },
+    chair: { en: 'Dr. Saad Al-Ghamdi, FRCSC', ar: 'د. سعد الغامدي' },
+    institution: { en: 'King Faisal Specialist Hospital & Research Centre', ar: 'مستشفى الملك فيصل التخصصي ومركز الأبحاث' },
+    focus: { en: 'Laparoscopic box trainers, robotic curricula & microsurgery mastery', ar: 'مناهج المناظير والجراحة الروبوتية والإتقان الإجرائي' },
+    membersCount: 390,
   },
   {
     index: '03',
-    name: { en: 'Saudi Heart Rhythm & Electrophysiology', ar: 'كهربائية القلب واضطرابات النظم' },
-    chair: { en: 'Dr. Tariq Al-Subaie, MD, FHRS', ar: 'د. طارق السبيعي' },
-    institution: { en: 'Prince Sultan Cardiac Center, Riyadh', ar: 'مركز الأمير سلطان لمعالجة أمراض وجراحة القلب' },
-    focus: { en: 'Catheter ablation standards, sudden cardiac death prevention, and ICD registries', ar: 'معايير الاستئصال القسطري والوقاية من الموت القلبي المفاجئ' },
-    membersCount: 290,
+    name: { en: 'In-Situ Patient Safety & Rapid Response', ar: 'المحاكاة الميدانية وسلامة المرضى' },
+    chair: { en: 'Dr. Bandar Al-Otaibi, MD, FACEP', ar: 'د. بندر العتيبي' },
+    institution: { en: 'King Abdulaziz Medical City, Riyadh', ar: 'مدينة الملك عبدالعزيز الطبية، الرياض' },
+    focus: { en: 'Code Blue latency audits, maternal hemorrhage drills & trauma activation', ar: 'تدقيق استجابة الطوارئ وتمارين نزيف الولادة والإصابات' },
+    membersCount: 470,
   },
   {
     index: '04',
-    name: { en: 'Preventive Cardiology & Lipidology', ar: 'الوقاية القلبية وأمراض الدهون' },
-    chair: { en: 'Dr. Maha Al-Zahrani, MD, PhD', ar: 'د. مها الزهراني' },
-    institution: { en: 'King Saud University Medical City', ar: 'المدينة الطبية بجامعة الملك سعود' },
-    focus: { en: 'Familial hypercholesterolemia screening and Vision 2030 community risk reduction', ar: 'فحص الكوليسترول العائلي ومبادرات الوقاية المجتمعية' },
-    membersCount: 510,
+    name: { en: 'Nursing & Interprofessional Education (IPE)', ar: 'التمريض والتعليم الصحي المشترك' },
+    chair: { en: 'Fatimah Al-Harbi, PhD, RN, CHSE', ar: 'د. فاطمة الحربي' },
+    institution: { en: 'Princess Nourah University Simulation Center', ar: 'مركز المحاكاة بجامعة الأميرة نورة' },
+    focus: { en: 'TeamSTEPPS communication, ICU handoffs & undergraduate IPE tracks', ar: 'التواصل بين التخصصات وتسليم الحالات الحرجة' },
+    membersCount: 680,
   },
   {
     index: '05',
-    name: { en: 'Pediatric & Adult Congenital Heart Disease', ar: 'أمراض قلب الأطفال والعيوب الخلقية' },
-    chair: { en: 'Dr. Khalid Al-Otaibi, MD', ar: 'د. خالد العتيبي' },
-    institution: { en: 'King Abdullah Specialist Children Hospital', ar: 'مستشفى الملك عبدالله التخصصي للأطفال' },
-    focus: { en: 'Fetal echocardiography screening and lifelong ACHD transition clinics', ar: 'فحص قلب الجنين وعيادات انتقال الرعاية للبالغين' },
-    membersCount: 340,
+    name: { en: 'Simulation Operations & AV Engineering', ar: 'عمليات المحاكاة والهندسة الصوتية والمرئية' },
+    chair: { en: 'Eng. Abdullah Al-Zahrani, CHSOS', ar: 'م. عبدالله الزهراني' },
+    institution: { en: 'King Fahad Medical City Simulation Hub', ar: 'مركز المحاكاة بمدينة الملك فهد الطبية' },
+    focus: { en: 'Moulage realism, wireless manikin programming & debriefing AV systems', ar: 'برمجة الدمى اللاسلكية والمؤثرات الطبية وأنظمة البث' },
+    membersCount: 310,
   },
   {
     index: '06',
-    name: { en: 'Cardiac Nursing & Allied Cardiovascular Health', ar: 'تمريض القلب والمهن الصحية المساندة' },
-    chair: { en: 'Amina Al-Qahtani, MSN, RN', ar: 'أ. أمينة القحطاني' },
-    institution: { en: 'Johns Hopkins Aramco Healthcare, Dhahran', ar: 'مركز جونز هوبكنز أرامكو الطبي، الظهران' },
-    focus: { en: 'CCU clinical competencies, cardiac rehabilitation, and patient adherence', ar: 'كفاءات العناية المركزة للقلب وبرامج التأهيل القلبي' },
-    membersCount: 820,
+    name: { en: 'Virtual Reality (VR), XR & AI Clinical Scenarios', ar: 'الواقع الافتراضي والسيناريوهات الذكية' },
+    chair: { en: 'Dr. Yasser Al-Subaie, MD, PhD', ar: 'د. ياسر السبيعي' },
+    institution: { en: 'Imam Abdulrahman Bin Faisal University, Dammam', ar: 'جامعة الإمام عبدالرحمن بن فيصل، الدمام' },
+    focus: { en: 'Immersive triage simulations, adaptive AI patients & remote assessment', ar: 'محاكاة الفرز الإسعافي والمرضى الافتراضيين التفاعليين' },
+    membersCount: 425,
   },
 ];
 
 export const TRAINING_COURSES: TrainingCourse[] = [
   {
-    id: 'BLS',
-    code: 'NCPR-BLS',
-    title: { en: 'Basic Life Support (BLS) Provider', ar: 'دورة دعم الحياة الأساسي (BLS)' },
-    duration: { en: '4.5 Hours · Hands-on Simulation', ar: '٤.٥ ساعات · محاكاة عملية' },
-    cmeHours: 4,
-    validity: { en: '2 Years · SHA-NCPR Card', ar: 'سنتان · بطاقة معتمدة' },
-    audience: { en: 'Physicians, nurses, paramedics, medical & dental students', ar: 'الأطباء والممرضين والمسعفين وطلاب الكليات الصحية' },
+    id: 'SIM-FAC',
+    code: 'SSSH-FAC-101',
+    title: {
+      en: 'Foundations of Healthcare Simulation & Structured Debriefing',
+      ar: 'أساسيات المحاكاة الصحية واستخلاص المعلومات المنظم',
+    },
+    duration: { en: '2 Days · 16 Hours Live Lab', ar: 'يومان · ١٦ ساعة تدريبية عملية' },
+    cmeHours: 16,
+    feeSar: 1800,
+    validity: { en: '3 Years · SSSH Educator Credential', ar: '٣ سنوات · شهادة ممارس محاكاة' },
+    audience: {
+      en: 'Physicians, clinical educators, nursing instructors & residency directors',
+      ar: 'الأطباء والمدربون السريريون وأعضاء هيئة التدريس ومديرو برامج الزمالة',
+    },
     description: {
-      en: 'High-quality single and multi-rescuer CPR for adults, children, and infants, effective bag-mask ventilation, and rapid AED deployment.',
-      ar: 'مهارات الإنعاش القلبي الرئوي عالي الجودة للبالغين والأطفال والرضع واستخدام جهاز الصدمات الكهربائية الآلي.',
+      en: 'Hands-on mastery of learning objectives, scenario authoring, prebriefing psychological safety, and Advocacy-Inquiry debriefing with live video playback.',
+      ar: 'إتقان كتابة أهداف التعلم، وتصميم السيناريوهات، والتمهيد الآمن نفسياً، وتطبيق استخلاص المعلومات مع مراجعة الفيديو المباشر.',
     },
   },
   {
-    id: 'ACLS',
-    code: 'NCPR-ACLS',
-    title: { en: 'Advanced Cardiovascular Life Support (ACLS)', ar: 'دورة دعم الحياة القلبي المتقدم (ACLS)' },
-    duration: { en: '14 Hours · 2-Day Clinical Lab', ar: '١٤ ساعة · يومان تدريبيان' },
+    id: 'SIM-OPS',
+    code: 'SSSH-OPS-204',
+    title: {
+      en: 'Simulation Operations, Manikin Programming & Moulage Specialist',
+      ar: 'أخصائي عمليات المحاكاة وبرمجة الدمى والمؤثرات السريرية',
+    },
+    duration: { en: '2 Days · 12 Hours Technical Lab', ar: 'يومان · ١٢ ساعة مختبر تقني' },
+    cmeHours: 12,
+    feeSar: 1500,
+    validity: { en: '3 Years · SSSH Operations Certificate', ar: '٣ سنوات · شهادة تشغيل معتمدة' },
+    audience: {
+      en: 'Simulation technicians, biomedical engineers, AV coordinators & lab managers',
+      ar: 'فنيو المحاكاة ومهندسو الأجهزة الطبية ومنسقو الأنظمة ومديرو المراكز',
+    },
+    description: {
+      en: 'Configure physiological state trends, wireless monitor overrides, realistic trauma moulage, and multi-room debriefing capture workflows.',
+      ar: 'برمجة المؤشرات الفسيولوجية، والتحكم بالشاشات السريرية، وإعداد المؤثرات الإصابية، وإدارة أنظمة البث والتسجيل.',
+    },
+  },
+  {
+    id: 'INSITU',
+    code: 'SSSH-SAF-302',
+    title: {
+      en: 'In-Situ Hospital Simulation & Crisis Resource Management (CRM)',
+      ar: 'المحاكاة الميدانية في المستشفيات وإدارة الأزمات السريرية',
+    },
+    duration: { en: '1.5 Days · 14 Hours Clinical Drill', ar: 'يوم ونصف · ١٤ ساعة تدريب ميداني' },
     cmeHours: 14,
-    validity: { en: '2 Years · SCFHS Recognized', ar: 'سنتان · معتمدة مهنياً' },
-    audience: { en: 'Emergency, ICU, CCU, anesthesia & internal medicine teams', ar: 'فرق الطوارئ والعناية المركزة والتخدير والباطنة' },
+    feeSar: 1400,
+    validity: { en: '2 Years · SSSH Safety Lead', ar: 'سنتان · شهادة قائد سلامة ميدانية' },
+    audience: {
+      en: 'ED, ICU, OR, obstetrics teams & hospital patient safety officers',
+      ar: 'فرق الطوارئ والعناية المركزة والعمليات ومسؤولو سلامة المرضى',
+    },
     description: {
-      en: 'Algorithmic management of cardiac arrest, peri-arrest arrhythmias, acute coronary syndromes, stroke recognition, and resuscitation team dynamics.',
-      ar: 'إدارة حالات توقف القلب واضطرابات النظم الحادة ومتلازمات الشريان التاجي وقيادة فريق الإنعاش.',
+      en: 'Plan and execute safe unit-based clinical simulations, identify latent safety threats (LSTs), and strengthen closed-loop emergency team communication.',
+      ar: 'تخطيط وتنفيذ تمارين المحاكاة داخل الأقسام الفعلية، واكتشاف مخاطر السلامة الكامنة، وتعزيز تواصل فرق الطوارئ.',
     },
   },
   {
-    id: 'PALS',
-    code: 'NCPR-PALS',
-    title: { en: 'Pediatric Advanced Life Support (PALS)', ar: 'دورة دعم الحياة المتقدم للأطفال (PALS)' },
-    duration: { en: '14 Hours · 2-Day Simulation', ar: '١٤ ساعة · يومان تدريبيان' },
-    cmeHours: 14,
-    validity: { en: '2 Years · SHA-NCPR Card', ar: 'سنتان · بطاقة معتمدة' },
-    audience: { en: 'Pediatricians, PICU nurses, and emergency clinicians', ar: 'أطباء الأطفال وتمريض العناية المركزة والطوارئ' },
+    id: 'SP-EDUC',
+    code: 'SSSH-SPE-210',
+    title: {
+      en: 'Standardized Patient (SP) Methodology & OSCE Station Design',
+      ar: 'منهجية المرضى المعياريين وتصميم محطات اختبار OSCE',
+    },
+    duration: { en: '1 Day · 10 Hours Assessment Lab', ar: 'يوم واحد · ١٠ ساعات تقييم عملي' },
+    cmeHours: 10,
+    feeSar: 1200,
+    validity: { en: '3 Years · SSSH Assessment Track', ar: '٣ سنوات · مسار التقييم السريري' },
+    audience: {
+      en: 'SP educators, medical school assessment coordinators & OSCE examiners',
+      ar: 'منسقو المرضى المعياريين وأعضاء لجان الاختبارات السريرية',
+    },
     description: {
-      en: 'Systematic pediatric assessment, respiratory distress intervention, shock stabilization, and pediatric arrhythmia resuscitation.',
-      ar: 'التقييم المنهجي للأطفال والتعامل مع الفشل التنفسي والصدمة واضطرابات النظم لدى الأطفال.',
+      en: 'Train and calibrate Standardized Patients for difficult clinical conversations, checklist validation, and high-stakes OSCE reliability.',
+      ar: 'تدريب ومعايرة المرضى المعياريين لمحطات التواصل الصعبة وبناء قوائم التحقق وضمان موثوقية الاختبار.',
     },
   },
   {
-    id: 'NRP',
-    code: 'NCPR-NRP',
-    title: { en: 'Neonatal Resuscitation Program (NRP)', ar: 'برنامج إنعاش حديثي الولادة (NRP)' },
-    duration: { en: '8 Hours · Delivery Suite Lab', ar: '٨ ساعات · تدريب غرف الولادة' },
+    id: 'CRM-ACLS',
+    code: 'SSSH-CRM-115',
+    title: {
+      en: 'High-Fidelity Resuscitation & Code Blue Simulation Workshop',
+      ar: 'ورشة محاكاة الإنعاش القلبي وإدارة حالات الطوارئ الحرجة',
+    },
+    duration: { en: '1 Day · 8 Hours Immersion', ar: 'يوم واحد · ٨ ساعات تطبيقية' },
     cmeHours: 8,
-    validity: { en: '2 Years · SHA-NCPR Card', ar: 'سنتان · بطاقة معتمدة' },
-    audience: { en: 'Neonatologists, obstetricians, NICU nurses & midwives', ar: 'أطباء حديثي الولادة والنساء والولادة والقابلات' },
-    description: {
-      en: 'Evidence-based stabilization of the newborn during the golden minute, positive-pressure ventilation, intubation, and umbilical access.',
-      ar: 'الاستقرار التنفسي والدوراني لحديثي الولادة في الدقيقة الذهبية والتهوية بالضغط الإيجابي.',
+    feeSar: 950,
+    validity: { en: '2 Years · SCFHS Accredited', ar: 'سنتان · معتمدة مهنياً' },
+    audience: {
+      en: 'Residents, critical care nurses, paramedics & rapid response teams',
+      ar: 'الأطباء المقيمون وتمريض العناية الحرجة والمسعفون وفرق الاستجابة السريعة',
     },
-  },
-  {
-    id: 'HEARTSAVER',
-    code: 'NCPR-HS',
-    title: { en: 'Heartsaver CPR & AED Community Track', ar: 'برنامج منقذ القلب المجتمعي (CPR & AED)' },
-    duration: { en: '3 Hours · Community Workshop', ar: '٣ ساعات · ورشة مجتمعية' },
-    cmeHours: 0,
-    validity: { en: '2 Years · Community Certificate', ar: 'سنتان · شهادة مجتمعية' },
-    audience: { en: 'Educators, corporate safety officers, coaches & citizens', ar: 'المعلمون ومسؤولو السلامة والمدربون وأفراد المجتمع' },
     description: {
-      en: 'Accessible hands-only CPR, choking relief, and public-access defibrillator readiness for schools, mosques, stadiums, and workplaces.',
-      ar: 'الإنعاش اليدوي وإسعاف الغصة واستخدام أجهزة الصدمات العامة في المدارس والمساجد ومقرات العمل.',
+      en: 'Immersive high-fidelity resuscitation scenarios emphasizing airway leadership, defibrillation timing, role clarity, and post-event team debriefing.',
+      ar: 'سيناريوهات إنعاش متقدمة عالية الدقة تركز على قيادة الفريق وإدارة مجرى الهواء والتوقيت الدقيق واستخلاص الأداء.',
     },
   },
 ];
 
 export const TRAINING_CENTERS: TrainingCenter[] = [
   {
-    id: 'tc-riyadh-1',
+    id: 'sim-riyadh-1',
     region: 'riyadh',
     regionLabel: { en: 'Riyadh', ar: 'الرياض' },
     city: { en: 'Riyadh', ar: 'الرياض' },
-    name: { en: 'King Saud University Medical City Simulation Center', ar: 'مركز المحاكاة بالمدينة الطبية بجامعة الملك سعود' },
-    courses: ['BLS', 'ACLS', 'PALS', 'NRP', 'HEARTSAVER'],
-    nextSession: 'Nov 24, 2026',
-    seatsAvailable: 14,
-    accreditationCode: 'NCPR-RYD-001',
+    name: {
+      en: 'King Saud University Clinical Skills & Simulation Center',
+      ar: 'مركز المهارات السريرية والمحاكاة بجامعة الملك سعود',
+    },
+    courses: ['SIM-FAC', 'SIM-OPS', 'INSITU', 'SP-EDUC', 'CRM-ACLS'],
+    nextSession: 'Dec 06, 2026',
+    seatsAvailable: 12,
+    accreditationCode: 'SSSH-RYD-001',
   },
   {
-    id: 'tc-riyadh-2',
+    id: 'sim-riyadh-2',
     region: 'riyadh',
     regionLabel: { en: 'Riyadh', ar: 'الرياض' },
     city: { en: 'Riyadh', ar: 'الرياض' },
-    name: { en: 'Prince Sultan Cardiac Center Training Academy', ar: 'أكاديمية التدريب بمركز الأمير سلطان للقلب' },
-    courses: ['BLS', 'ACLS', 'PALS'],
-    nextSession: 'Nov 28, 2026',
-    seatsAvailable: 8,
-    accreditationCode: 'NCPR-RYD-014',
+    name: {
+      en: 'Princess Nourah University Simulation & Skills Academy',
+      ar: 'أكاديمية المحاكاة والمهارات بجامعة الأميرة نورة',
+    },
+    courses: ['SIM-FAC', 'SP-EDUC', 'INSITU', 'CRM-ACLS'],
+    nextSession: 'Dec 13, 2026',
+    seatsAvailable: 9,
+    accreditationCode: 'SSSH-RYD-008',
   },
   {
-    id: 'tc-makkah-1',
+    id: 'sim-makkah-1',
     region: 'makkah',
     regionLabel: { en: 'Makkah / Jeddah', ar: 'مكة / جدة' },
     city: { en: 'Jeddah', ar: 'جدة' },
-    name: { en: 'King Faisal Specialist Hospital Jeddah Life Support Lab', ar: 'مختبر دعم الحياة بمستشفى الملك فيصل التخصصي بجدة' },
-    courses: ['BLS', 'ACLS', 'PALS', 'NRP'],
-    nextSession: 'Nov 26, 2026',
-    seatsAvailable: 11,
-    accreditationCode: 'NCPR-JED-004',
+    name: {
+      en: 'King Abdulaziz University Clinical Simulation Center',
+      ar: 'مركز المحاكاة السريرية بجامعة الملك عبدالعزيز بجدة',
+    },
+    courses: ['SIM-FAC', 'SIM-OPS', 'SP-EDUC', 'CRM-ACLS'],
+    nextSession: 'Dec 10, 2026',
+    seatsAvailable: 15,
+    accreditationCode: 'SSSH-JED-003',
   },
   {
-    id: 'tc-eastern-1',
+    id: 'sim-eastern-1',
     region: 'eastern',
     regionLabel: { en: 'Eastern Province', ar: 'المنطقة الشرقية' },
     city: { en: 'Dammam', ar: 'الدمام' },
-    name: { en: 'Saud Al-Babtain Cardiac Center Resuscitation Unit', ar: 'وحدة الإنعاش بمركز البابطين للقلب بالدمام' },
-    courses: ['BLS', 'ACLS', 'HEARTSAVER'],
-    nextSession: 'Dec 02, 2026',
-    seatsAvailable: 19,
-    accreditationCode: 'NCPR-DMM-009',
+    name: {
+      en: 'Imam Abdulrahman Bin Faisal Simulation & Training Hub',
+      ar: 'مركز المحاكاة والتدريب بجامعة الإمام عبدالرحمن بن فيصل',
+    },
+    courses: ['SIM-FAC', 'SIM-OPS', 'INSITU', 'CRM-ACLS'],
+    nextSession: 'Dec 17, 2026',
+    seatsAvailable: 14,
+    accreditationCode: 'SSSH-DMM-005',
   },
   {
-    id: 'tc-asir-1',
+    id: 'sim-asir-1',
     region: 'asir',
     regionLabel: { en: 'Asir', ar: 'عسير' },
     city: { en: 'Abha', ar: 'أبها' },
-    name: { en: 'Aseer Central Hospital Clinical Skills & CPR Center', ar: 'مركز المهارات السريرية بمستشفى عسير المركزي' },
-    courses: ['BLS', 'ACLS', 'NRP'],
-    nextSession: 'Dec 05, 2026',
-    seatsAvailable: 9,
-    accreditationCode: 'NCPR-ABH-003',
+    name: {
+      en: 'King Khalid University Medical Simulation & Skills Lab',
+      ar: 'مختبر المحاكاة الطبية بجامعة الملك خالد بأبها',
+    },
+    courses: ['SIM-FAC', 'INSITU', 'CRM-ACLS'],
+    nextSession: 'Dec 20, 2026',
+    seatsAvailable: 10,
+    accreditationCode: 'SSSH-ABH-002',
   },
   {
-    id: 'tc-madinah-1',
+    id: 'sim-madinah-1',
     region: 'madinah',
     regionLabel: { en: 'Madinah', ar: 'المدينة المنورة' },
     city: { en: 'Madinah', ar: 'المدينة المنورة' },
-    name: { en: 'Madinah Cardiac Center Accredited Training Hub', ar: 'مركز التدريب المعتمد بمركز أمراض وجراحة القلب بالمدينة' },
-    courses: ['BLS', 'ACLS', 'PALS', 'HEARTSAVER'],
-    nextSession: 'Dec 07, 2026',
-    seatsAvailable: 12,
-    accreditationCode: 'NCPR-MED-002',
+    name: {
+      en: 'Taibah University Healthcare Simulation Center',
+      ar: 'مركز المحاكاة الصحية بجامعة طيبة بالمدينة المنورة',
+    },
+    courses: ['SIM-FAC', 'SP-EDUC', 'CRM-ACLS'],
+    nextSession: 'Dec 22, 2026',
+    seatsAvailable: 11,
+    accreditationCode: 'SSSH-MED-004',
   },
 ];
 
 export const CERTIFICATE_REGISTRY: CertificateRecord[] = [
   {
-    id: 'SHA-NCPR-2026-8841',
+    id: 'SSSH-2026-8841',
     holderName: { en: 'Dr. Omar Abdulrahman Al-Mansour', ar: 'د. عمر عبدالرحمن المنصور' },
-    course: 'ACLS Provider (NCPR-ACLS)',
-    center: { en: 'King Saud University Medical City Simulation Center', ar: 'مركز المحاكاة بالمدينة الطبية بجامعة الملك سعود' },
+    course: 'Healthcare Simulation & Debriefing (SSSH-FAC-101)',
+    center: {
+      en: 'King Saud University Clinical Skills & Simulation Center',
+      ar: 'مركز المهارات السريرية والمحاكاة بجامعة الملك سعود',
+    },
     issuedDate: '2026-04-14',
-    expiryDate: '2028-04-14',
+    expiryDate: '2029-04-14',
     status: 'Valid',
   },
   {
-    id: 'SHA-NCPR-2026-4109',
-    holderName: { en: 'Sarah Mohammed Al-Dosari, RN', ar: 'أ. سارة محمد الدوسري' },
-    course: 'PALS Provider (NCPR-PALS)',
-    center: { en: 'King Faisal Specialist Hospital Jeddah Life Support Lab', ar: 'مختبر دعم الحياة بمستشفى الملك فيصل التخصصي بجدة' },
+    id: 'SSSH-2026-4109',
+    holderName: { en: 'Eng. Sarah Mohammed Al-Dosari', ar: 'م. سارة محمد الدوسري' },
+    course: 'Simulation Operations Specialist (SSSH-OPS-204)',
+    center: {
+      en: 'King Abdulaziz University Clinical Simulation Center',
+      ar: 'مركز المحاكاة السريرية بجامعة الملك عبدالعزيز بجدة',
+    },
     issuedDate: '2026-02-09',
-    expiryDate: '2028-02-09',
+    expiryDate: '2029-02-09',
     status: 'Valid',
   },
   {
-    id: 'SHA-NCPR-2025-7720',
+    id: 'SSSH-2025-7720',
     holderName: { en: 'Dr. Faisal Saad Al-Shehri', ar: 'د. فيصل سعد الشهري' },
-    course: 'BLS Provider (NCPR-BLS)',
-    center: { en: 'Saud Al-Babtain Cardiac Center Resuscitation Unit', ar: 'وحدة الإنعاش بمركز البابطين للقلب بالدمام' },
+    course: 'In-Situ Hospital Safety Lead (SSSH-SAF-302)',
+    center: {
+      en: 'Imam Abdulrahman Bin Faisal Simulation & Training Hub',
+      ar: 'مركز المحاكاة والتدريب بجامعة الإمام عبدالرحمن بن فيصل',
+    },
     issuedDate: '2025-01-20',
     expiryDate: '2027-01-20',
     status: 'Renewal Due',
+  },
+];
+
+export const SAMPLE_INVOICES = [
+  {
+    invoiceId: 'INV-SSSH-2026-3041',
+    itemTitle: 'Foundations of Healthcare Simulation & Debriefing (SSSH-FAC-101)',
+    fullName: 'Dr. Omar Al-Mansour',
+    totalSar: 2070,
+    paymentMethod: 'mada / Credit Card',
+    status: 'Paid' as const,
+    date: '2026-11-12',
+  },
+  {
+    invoiceId: 'INV-SSSH-2026-2984',
+    itemTitle: 'Simulation Operations Specialist (SSSH-OPS-204)',
+    fullName: 'Eng. Reem Al-Harbi',
+    totalSar: 1725,
+    paymentMethod: 'SADAD Biller 904',
+    status: 'Pending SADAD' as const,
+    date: '2026-11-15',
   },
 ];
 
@@ -569,80 +659,113 @@ export const CONFERENCE_DAYS: ConferenceDay[] = [
   {
     dayKey: 'day1',
     label: { en: 'Day 01', ar: 'اليوم الأول' },
-    date: { en: 'Thursday, March 25, 2027', ar: 'الخميس ٢٥ مارس ٢٠٢٧' },
-    theme: { en: 'Global Heart Opening & Interventional Frontiers', ar: 'الافتتاح العلمي وآفاق القسطرة التداخلية' },
+    date: { en: 'Tuesday, February 16, 2027', ar: 'الثلاثاء ١٦ فبراير ٢٠٢٧' },
+    theme: {
+      en: 'National Simulation Governance, AI Scenarios & Patient Safety',
+      ar: 'حوكمة المحاكاة الوطنية والسيناريوهات الذكية وسلامة المرضى',
+    },
     sessions: [
       {
         time: '08:30 – 10:00',
         hall: { en: 'Diriyah Grand Ballroom', ar: 'قاعة الدرعية الكبرى' },
         track: { en: 'Plenary Keynote', ar: 'الجلسة الافتتاحية' },
-        title: { en: 'Vision 2030 Cardiovascular Transformation: Tele-Cardiology & National Registries', ar: 'تحول رعاية القلب في رؤية ٢٠٣٠: طب القلب عن بُعد والسجلات الوطنية' },
-        speaker: { en: 'Prof. Waleed Al-Habeeb · Riyadh', ar: 'أ.د. وليد الحبيب · الرياض' },
+        title: {
+          en: 'National Simulation Accreditation Roadmap: Aligning Academic Hubs with Vision 2030',
+          ar: 'خارطة اعتماد مراكز المحاكاة الوطنية ومواءمتها مع رؤية السعودية ٢٠٣٠',
+        },
+        speaker: { en: 'Dr. Norah Al-Qahtani · Riyadh', ar: 'د. نورة القحطاني · الرياض' },
       },
       {
         time: '10:30 – 12:15',
-        hall: { en: 'Hall B · Interventional', ar: 'قاعة ب · القسطرة' },
-        track: { en: 'Live Case Transmission', ar: 'بث مباشر من القسطرة' },
-        title: { en: 'Complex Left-Main Bifurcation PCI Guided by Intravascular Ultrasound', ar: 'قسطرة الجذع الأيسر المعقدة بتوجيه الموجات فوق الصوتية داخل الأوعية' },
-        speaker: { en: 'KFSHRC Cath Lab Team · Riyadh', ar: 'فريق القسطرة بالتخصصي · الرياض' },
+        hall: { en: 'Hall B · Debriefing Lab', ar: 'قاعة ب · مختبر الاستخلاص' },
+        track: { en: 'Live Simulation Demo', ar: 'عرض محاكاة مباشر' },
+        title: {
+          en: 'Live Multidisciplinary Trauma Code & Real-Time Advocacy-Inquiry Debriefing',
+          ar: 'تمرين حي لاستجابة الإصابات متعددة التخصصات واستخلاص الأداء المباشر',
+        },
+        speaker: { en: 'KAMC Simulation Team · Riyadh', ar: 'فريق المحاكاة بمدينة الملك عبدالعزيز الطبية' },
       },
       {
         time: '14:00 – 15:45',
-        hall: { en: 'Hall C · Preventive', ar: 'قاعة ج · الوقاية' },
-        track: { en: 'Guideline Symposium', ar: 'ندوة الأدلة السريرية' },
-        title: { en: 'Implementing 2026 SHA Chronic Coronary & Lipid Targets in Primary Care', ar: 'تطبيق أهداف الدهون والشرايين التاجية ٢٠٢٦ في الرعاية الأولية' },
-        speaker: { en: 'Dr. Maha Al-Zahrani · Riyadh', ar: 'د. مها الزهراني · الرياض' },
+        hall: { en: 'Hall C · XR & Technology', ar: 'قاعة ج · الواقع الممتد والذكاء الاصطناعي' },
+        track: { en: 'Innovation Symposium', ar: 'ندوة الابتكار التقني' },
+        title: {
+          en: 'Integrating Adaptive Virtual Patients into Undergraduate Clinical Clerkships',
+          ar: 'دمج المرضى الافتراضيين التفاعليين في التدريب السريري لطلبة الطب والتمريض',
+        },
+        speaker: { en: 'Dr. Yasser Al-Subaie · Dammam', ar: 'د. ياسر السبيعي · الدمام' },
       },
     ],
   },
   {
     dayKey: 'day2',
     label: { en: 'Day 02', ar: 'اليوم الثاني' },
-    date: { en: 'Friday, March 26, 2027', ar: 'الجمعة ٢٦ مارس ٢٠٢٧' },
-    theme: { en: 'Heart Failure, Electrophysiology & Joint International Sessions', ar: 'قصور القلب وكهربائية القلب والجلسات الدولية المشتركة' },
+    date: { en: 'Wednesday, February 17, 2027', ar: 'الأربعاء ١٧ فبراير ٢٠٢٧' },
+    theme: {
+      en: 'In-Situ Hospital Safety Audits & Procedural Mastery Learning',
+      ar: 'المحاكاة الميدانية بالمستشفيات وإتقان المهارات الإجرائية',
+    },
     sessions: [
       {
         time: '09:00 – 10:45',
         hall: { en: 'Diriyah Grand Ballroom', ar: 'قاعة الدرعية الكبرى' },
-        track: { en: 'SHA × ESC Joint Session', ar: 'جلسة مشتركة مع الجمعية الأوروبية' },
-        title: { en: 'Cardiogenic Shock Networks & Mechanical Support Timing Across Gulf Centers', ar: 'شبكات الصدمة القلبية وتوقيت الدعم الميكانيكي في المراكز الخليجية' },
-        speaker: { en: 'Dr. Noura Al-Harbi & International Faculty', ar: 'د. نورة الحربي ومتحدثون دوليون' },
+        track: { en: 'SSSH × International Faculty', ar: 'جلسة دولية مشتركة' },
+        title: {
+          en: 'Translational Simulation Outcomes: Reducing Hospital Serious Safety Events by 40%',
+          ar: 'أثر المحاكاة الانتقالية في خفض أحداث السلامة الجسيمة بالمستشفيات بنسبة ٤٠٪',
+        },
+        speaker: { en: 'Dr. Bandar Al-Otaibi & International Panel', ar: 'د. بندر العتيبي ومتحدثون دوليون' },
       },
       {
         time: '11:15 – 13:00',
-        hall: { en: 'Hall B · Electrophysiology', ar: 'قاعة ب · كهربائية القلب' },
-        track: { en: 'SHRS Track', ar: 'مسار نظم القلب' },
-        title: { en: 'Pulsed-Field Ablation Outcomes in Persistent Atrial Fibrillation', ar: 'نتائج الاستئصال بالمجال النبضي في الرجفان الأذيني المستمر' },
-        speaker: { en: 'Dr. Tariq Al-Subaie · Riyadh', ar: 'د. طارق السبيعي · الرياض' },
+        hall: { en: 'Hall B · Surgical Sim', ar: 'قاعة ب · المحاكاة الجراحية' },
+        track: { en: 'Procedural Track', ar: 'مسار الجراحة والمناظير' },
+        title: {
+          en: 'Competency-Based Surgical Simulation Benchmarks for Residency Promotion',
+          ar: 'معايير الإتقان الجراحي بالمحاكاة لترقية أطباء الإقامة',
+        },
+        speaker: { en: 'Dr. Saad Al-Ghamdi · Riyadh', ar: 'د. سعد الغامدي · الرياض' },
       },
       {
         time: '15:00 – 17:00',
-        hall: { en: 'Hall D · Fellows Forum', ar: 'قاعة د · منتدى الزملاء' },
-        track: { en: 'Young Investigators Award', ar: 'جائزة الباحثين الشباب' },
-        title: { en: 'Original Clinical Research Presentations & Cardiology Quiz Final', ar: 'عروض الأبحاث السريرية الأصلية ونهائي مسابقة الزمالة' },
-        speaker: { en: 'SHA Scientific Committee', ar: 'اللجنة العلمية بالجمعية' },
+        hall: { en: 'Hall D · SimWars Arena', ar: 'قاعة د · تحدي فرق المحاكاة' },
+        track: { en: 'National SimWars Final', ar: 'نهائي تحدي المحاكاة الوطني' },
+        title: {
+          en: 'Interprofessional Hospital Team Competition & Scenario Excellence Awards',
+          ar: 'منافسة الفرق الصحية متعددة التخصصات وجوائز التميز في السيناريوهات',
+        },
+        speaker: { en: 'SSSH Scientific Committee', ar: 'اللجنة العلمية بالجمعية' },
       },
     ],
   },
   {
     dayKey: 'day3',
     label: { en: 'Day 03', ar: 'اليوم الثالث' },
-    date: { en: 'Saturday, March 27, 2027', ar: 'السبت ٢٧ مارس ٢٠٢٧' },
-    theme: { en: 'Structural Valve Care, Pediatric Cardiology & Cardiac Nursing', ar: 'أمراض الصمامات وقلب الأطفال وتمريض القلب' },
+    date: { en: 'Thursday, February 18, 2027', ar: 'الخميس ١٨ فبراير ٢٠٢٧' },
+    theme: {
+      en: 'Simulation Operations, Standardized Patients & OSCE Psychometrics',
+      ar: 'عمليات المحاكاة والمرضى المعياريون واختبارات الكفاءة السريرية',
+    },
     sessions: [
       {
         time: '09:00 – 11:00',
-        hall: { en: 'Hall A · Structural', ar: 'قاعة أ · الصمامات' },
-        track: { en: 'Valvular Innovation', ar: 'ابتكارات الصمامات' },
-        title: { en: 'Transcatheter Mitral & Tricuspid Edge-to-Edge Repair: 5-Year Saudi Registry', ar: 'إصلاح الصمام الميترالي وثلاثي الشرفات بالقسطرة: السجل السعودي لخمس سنوات' },
-        speaker: { en: 'Dr. Fahad Al-Khuwaiter · Riyadh', ar: 'د. فهد الخويطر · الرياض' },
+        hall: { en: 'Hall A · Operations', ar: 'قاعة أ · العمليات والتشغيل' },
+        track: { en: 'CHSOS Prep Track', ar: 'مسار التشغيل والتقنية' },
+        title: {
+          en: 'Managing Multi-Campus Simulation Inventories, AV Telemetry & ROI Reporting',
+          ar: 'إدارة أصول مراكز المحاكاة متعددة المقرات وأنظمة البث ومؤشرات الأثر',
+        },
+        speaker: { en: 'Eng. Abdullah Al-Zahrani · Riyadh', ar: 'م. عبدالله الزهراني · الرياض' },
       },
       {
         time: '11:30 – 13:30',
-        hall: { en: 'Hall C · Nursing & Allied', ar: 'قاعة ج · التمريض والمهن المساندة' },
-        track: { en: 'Allied Health Track', ar: 'مسار المهن المساندة' },
-        title: { en: 'Structured Cardiac Rehabilitation & Post-Discharge Adherence Models', ar: 'نماذج التأهيل القلبي المنظم والالتزام العلاجي بعد الخروج' },
-        speaker: { en: 'Amina Al-Qahtani, MSN · Dhahran', ar: 'أ. أمينة القحطاني · الظهران' },
+        hall: { en: 'Hall C · Assessment', ar: 'قاعة ج · التقييم السريري' },
+        track: { en: 'SP & OSCE Workshop', ar: 'ورشة المرضى المعياريين' },
+        title: {
+          en: 'Calibrating Bilingual Arabic/English Standardized Patients for Communication OSCEs',
+          ar: 'معايرة المرضى المعياريين ثنائيي اللغة لمحطات التواصل السريري',
+        },
+        speaker: { en: 'Dr. Fatimah Al-Harbi · Riyadh', ar: 'د. فاطمة الحربي · الرياض' },
       },
     ],
   },
@@ -650,224 +773,269 @@ export const CONFERENCE_DAYS: ConferenceDay[] = [
 
 export const JOURNAL_ARTICLES: JournalArticle[] = [
   {
-    id: 'jsha-lead',
+    id: 'sjhs-lead',
     tier: 'lead',
-    volume: 'Vol. 38 · Issue 3',
+    volume: 'Vol. 11 · Issue 3',
     publishedDate: 'October 2026',
-    readTime: '11 min read',
+    readTime: '9 min read',
     category: { en: 'Original Research', ar: 'بحث أصيل' },
     title: {
-      en: 'Ten-Year Survival and Door-to-Balloon Trends in the Saudi Acute Myocardial Infarction Registry (STARS-2)',
-      ar: 'مؤشرات البقاء لعشر سنوات وأزمنة القسطرة الأولية في السجل السعودي لاحتشاء عضلة القلب',
+      en: 'Multicenter In-Situ Simulation Audits Uncover 148 Latent Safety Threats Across Saudi Emergency & Obstetric Units',
+      ar: 'تمارين المحاكاة الميدانية متعددة المراكز تكشف ١٤٨ خطراً كامناً للسلامة في أقسام الطوارئ والولادة',
     },
-    authors: 'Al-Saif S, Al-Habib KF, Hersi A, Al-Murayeh M, et al.',
+    authors: 'Al-Otaibi B, Al-Qahtani N, Al-Harbi F, Al-Zahrani A, et al.',
     deck: {
-      en: 'Analysis of 18,420 STEMI admissions across 42 Saudi Ministry of Health and specialist cardiac hubs demonstrates a 34% reduction in in-hospital mortality following regional STEMI network integration.',
-      ar: 'تحليل ١٨,٤٢٠ حالة احتشاء عضلة القلب في ٤٢ مركزاً بالمملكة يظهر انخفاضاً بنسبة ٣٤٪ في الوفيات داخل المستشفى بعد تكامل شبكات القسطرة.',
+      en: 'A 12-month translational simulation initiative across 14 Saudi hospitals resolved equipment accessibility gaps and cut emergency escalation delays by 36%.',
+      ar: 'أسفرت مبادرة محاكاة انتقالية خلال ١٢ شهراً في ١٤ مستشفى سعودياً عن سد فجوات التجهيز وخفض زمن الاستجابة الطارئة بنسبة ٣٦٪.',
     },
     abstract: {
-      en: 'Background: Regional STEMI care networks under Saudi Vision 2030 health clusters have expanded primary PCI access across urban and peripheral hospitals. Methods: Prospective multicenter cohort across 42 tertiary and spoke hospitals (2016–2026). Results: Median door-to-balloon time improved from 89 minutes to 54 minutes (p < 0.001), with 30-day mortality declining from 6.8% to 4.4%. Conclusion: Hub-and-spoke emergency ECG transmission and direct cath-lab activation substantially improve national acute coronary survival.',
-      ar: 'الخلفية: أسهمت شبكات رعاية الجلطات القلبية ضمن التجمعات الصحية في توسيع الوصول للقسطرة الأولية. النتائج: انخفض متوسط زمن التدخل من ٨٩ دقيقة إلى ٥٤ دقيقة مع انخفاض ملموس في الوفيات خلال ٣٠ يوماً.',
+      en: 'Background: In-situ simulation evaluates real clinical teams inside actual care environments. Methods: 96 unannounced and scheduled drills were executed across 14 tertiary and regional hospitals. Results: 148 latent safety threats were categorized (42% equipment/medication readiness, 35% role communication, 23% physical environment), with 91% remediated within 30 days. Conclusion: Systematic in-situ simulation acts as a proactive patient safety sensor.',
+      ar: 'الخلفية: تختبر المحاكاة الميدانية الفرق السريرية في بيئة العمل الحقيقية. النتائج: تم تنفيذ ٩٦ تمريناً في ١٤ مستشفى ورصد ١٤٨ خطراً كامناً ومعالجة ٩١٪ منها خلال ٣٠ يوماً.',
     },
-    doi: '10.37616/2212-5043.1408',
+    doi: '10.4103/sjhs.2026.1103',
   },
   {
-    id: 'jsha-sec-1',
+    id: 'sjhs-sec-1',
     tier: 'secondary',
-    volume: 'Vol. 38 · Issue 3',
+    volume: 'Vol. 11 · Issue 3',
     publishedDate: 'September 2026',
     readTime: '7 min read',
-    category: { en: 'Clinical Review', ar: 'مراجعة سريرية' },
+    category: { en: 'Mastery Learning', ar: 'التعلم بالإتقان' },
     title: {
-      en: 'Virtual Heart Failure Clinics & Seha Virtual Hospital Integration in Rural Clusters',
-      ar: 'عيادات قصور القلب الافتراضية وتكامل مستشفى صحة الافتراضي في المناطق الطرفية',
+      en: 'Simulation-Based Mastery Learning for Central Venous Catheter Insertion Among Saudi Residents',
+      ar: 'التعلم بالإتقان القائم على المحاكاة لإجراءات القسطرة الوريدية المركزية لدى الأطباء المقيمين',
     },
-    authors: 'Al-Harbi N, Al-Ghamdi S, Al-Jasser T.',
+    authors: 'Al-Ghamdi S, Al-Subaie Y.',
     deck: {
-      en: 'Protocolized tele-titration of quadruple heart failure therapy reduced 90-day readmissions by 28% across six regional health clusters.',
-      ar: 'قلصت المعايرة الافتراضية للعلاج الرباعي إعادة التنويم خلال ٩٠ يوماً بنسبة ٢٨٪ عبر ستة تجمعات صحية.',
+      en: 'Ultrasound-guided task trainers with deliberate practice reduced mechanical complications by 62% during first-year ICU rotations.',
+      ar: 'خفض التدريب المتعمد بالموجات فوق الصوتية المضاعفات الإجرائية بنسبة ٦٢٪ خلال مناوبات العناية المركزة.',
     },
     abstract: {
-      en: 'Tele-cardiology consultation paired with home-monitoring biomarkers enables safe uptitration of ARNI and SGLT2i therapy for patients residing over 150 km from tertiary cardiac centers.',
-      ar: 'يتيح الطب القلبي عن بُعد مع المؤشرات الحيوية المنزلية زيادة جرعات أدوية قصور القلب بأمان للمرضى خارج المدن الرئيسية.',
+      en: 'Prospective cohort comparing traditional apprenticeship versus simulation-based mastery learning (SBML) with minimum passing standards prior to supervised patient procedures.',
+      ar: 'دراسة مقارنة تثبت تفوق التعلم بالإتقان القائم على المحاكاة في رفع كفاءة الإجراءات السريرية قبل التطبيق على المرضى.',
     },
-    doi: '10.37616/2212-5043.1409',
+    doi: '10.4103/sjhs.2026.1092',
   },
   {
-    id: 'jsha-sec-2',
+    id: 'sjhs-sec-2',
     tier: 'secondary',
-    volume: 'Vol. 38 · Issue 2',
+    volume: 'Vol. 11 · Issue 2',
     publishedDate: 'August 2026',
     readTime: '6 min read',
-    category: { en: 'Consensus Statement', ar: 'بيان توافقي' },
+    category: { en: 'Faculty Development', ar: 'تطوير المدربين' },
     title: {
-      en: 'Cardiac Screening Protocols for Competitive Athletes & Ramadan Fasting Cardiovascular Guidance',
-      ar: 'بروتوكولات الفحص القلبي للرياضيين وإرشادات صيام رمضان لمرضى القلب',
+      en: 'Objective Structured Debriefing Assessment (OSDA) Reliability Across Bilingual Saudi Centers',
+      ar: 'موثوقية أداة التقييم المنظم لاستخلاص المعلومات عبر مراكز المحاكاة السعودية',
     },
-    authors: 'Al-Subaie T, Al-Otaibi K, SHA Preventive Panel.',
+    authors: 'Al-Qahtani N, Al-Harbi F.',
     deck: {
-      en: 'Risk-stratified clinical pathways for pre-participation ECG evaluation and individualized medication timing during fasting hours.',
-      ar: 'مسارات سريرية مصنفة للمخاطر لتقييم تخطيط القلب للرياضيين وتنظيم مواعيد الأدوية خلال شهر رمضان.',
+      en: 'Peer-observed debriefing coaching raised structured facilitator scores from 68% to 91% over two academic semesters.',
+      ar: 'رفع التوجيه الأقراني لمدربي المحاكاة درجات جودة الاستخلاص من ٦٨٪ إلى ٩١٪ خلال فصلين أكاديميين.',
     },
     abstract: {
-      en: 'Provides clinicians with clear low, moderate, and high-risk stratification criteria for patients with coronary artery disease, heart failure, and anticoagulation therapy wishing to observe fasting safely.',
-      ar: 'يوفر للأطباء معايير تصنيف واضحة لمستويات الخطورة لمرضى الشرايين التاجية وقصور القلب ومميعات الدم خلال الصيام.',
+      en: 'Validates structured feedback rubrics for faculty leading clinical debriefings in both English and Arabic healthcare curricula.',
+      ar: 'تحقق من موثوقية معايير تقييم جودة الاستخلاص التدريبي باللغتين العربية والإنجليزية.',
     },
-    doi: '10.37616/2212-5043.1394',
+    doi: '10.4103/sjhs.2026.1078',
   },
   {
-    id: 'jsha-arch-1',
+    id: 'sjhs-arch-1',
     tier: 'archive',
-    volume: 'Vol. 38 · Issue 2',
+    volume: 'Vol. 11 · Issue 2',
     publishedDate: 'July 2026',
     readTime: '5 min read',
-    category: { en: 'Registry Brief', ar: 'موجز سجل' },
+    category: { en: 'Technology Brief', ar: 'موجز تقني' },
     title: {
-      en: 'Familial Hypercholesterolemia Cascade Screening Outcomes in Riyadh & Jeddah',
-      ar: 'نتائج الفحص العائلي المتسلسل لفرط كوليسترول الدم الوراثي في الرياض وجدة',
+      en: 'VR Triage Scenarios vs. Physical Moulage in Mass-Casualty Preparedness Drills',
+      ar: 'مقارنة سيناريوهات الفرز بالواقع الافتراضي مع المحاكاة الفيزيائية في تمارين الكوارث',
     },
-    authors: 'Al-Zahrani M, Al-Rasadi K.',
+    authors: 'Al-Subaie Y, Al-Zahrani A.',
     deck: {
-      en: 'Early genetic and lipid cascade screening identified 312 index families for timely PCSK9 pathway intervention.',
-      ar: 'أسفر الفحص الوراثي المتسلسل عن اكتشاف ٣١٢ عائلة مؤهلة للتدخل العلاجي المبكر.',
+      en: 'Hybrid VR pre-training paired with physical ward drills lowered consumable costs by 38% while preserving decision accuracy.',
+      ar: 'خفض التدريب الهجين بالواقع الافتراضي التكاليف التشغيلية بنسبة ٣٨٪ مع الحفاظ على دقة الفرز.',
     },
     abstract: {
-      en: 'Multicenter Saudi Familial Hypercholesterolemia Registry data highlighting under-recognition of premature coronary risk and dramatic LDL-C reductions post-cascade screening.',
-      ar: 'بيانات السجل السعودي لفرط الكوليسترول العائلي التي تبرز أهمية الاكتشاف المبكر لخفض مخاطر الشرايين التاجية.',
+      en: 'Compares learner triage accuracy, cognitive load, and per-trainee operational cost between VR and full-scale moulage exercises.',
+      ar: 'مقارنة دقة الفرز والحمل المعرفي والتكلفة التشغيلية بين الواقع الافتراضي والمحاكاة الميدانية.',
     },
-    doi: '10.37616/2212-5043.1388',
+    doi: '10.4103/sjhs.2026.1064',
   },
   {
-    id: 'jsha-arch-2',
+    id: 'sjhs-arch-2',
     tier: 'archive',
-    volume: 'Vol. 38 · Issue 1',
+    volume: 'Vol. 11 · Issue 1',
     publishedDate: 'May 2026',
     readTime: '8 min read',
-    category: { en: 'Original Research', ar: 'بحث أصيل' },
+    category: { en: 'Consensus Paper', ar: 'ورقة توافقية' },
     title: {
-      en: 'Long-Term Outcomes of Pediatric Transcatheter ASD & VSD Closure in Saudi Tertiary Hubs',
-      ar: 'النتائج طويلة المدى لإغلاق ثقوب القلب لدى الأطفال بالقسطرة في المراكز السعودية',
+      en: 'Minimum Technical & Staffing Standards for Hospital Simulation Labs in KSA',
+      ar: 'الحد الأدنى للمعايير التقنية والكوادر لمختبرات المحاكاة في مستشفيات المملكة',
     },
-    authors: 'Al-Otaibi K, Al-Muhaya M.',
+    authors: 'SSSH Operations & Accreditation Taskforce.',
     deck: {
-      en: 'Five-year echocardiographic follow-up across 1,140 pediatric interventions confirms 98.6% procedural freedom from re-intervention.',
-      ar: 'متابعة خمس سنوات لـ ١,١٤٠ تدخلاً قسطرياً للأطفال تؤكد نجاحاً إجرائياً بنسبة ٩٨.٦٪.',
+      en: 'Outlines technician-to-learner ratios, debriefing room acoustics, and preventative equipment lifecycle planning.',
+      ar: 'يحدد نسب الفنيين للمتدربين وعزل غرف الاستخلاص وخطط الصيانة الدورية للأجهزة.',
     },
     abstract: {
-      en: 'Retrospective and prospective cohort evaluation of contemporary device closure safety and somatic growth recovery in congenital septal defects.',
-      ar: 'تقييم سريري لسلامة أجهزة الإغلاق القسطري وتحسن النمو لدى الأطفال المصابين بعيوب الحاجز القلبي.',
+      en: 'National reference blueprint for hospital administrators commissioning new clinical skills and simulation centers.',
+      ar: 'مرجع وطني لمديري المستشفيات عند تأسيس وتشغيل مراكز المهارات والمحاكاة السريرية.',
     },
-    doi: '10.37616/2212-5043.1371',
+    doi: '10.4103/sjhs.2026.1041',
   },
 ];
 
 export const BOARD_MEMBERS: BoardMember[] = [
   {
-    name: { en: 'Prof. Waleed Al-Habeeb, MD, FACC', ar: 'أ.د. وليد الحبيب' },
-    role: { en: 'President, Saudi Heart Association', ar: 'رئيس مجلس إدارة الجمعية السعودية للقلب' },
+    name: { en: 'Dr. Norah Al-Qahtani, MD, CHSE', ar: 'د. نورة القحطاني' },
+    role: { en: 'President, SSSH', ar: 'رئيسة مجلس إدارة الجمعية' },
     institution: { en: 'King Saud University Medical City, Riyadh', ar: 'المدينة الطبية بجامعة الملك سعود، الرياض' },
-    specialty: { en: 'Heart Failure & Cardiac Transplantation', ar: 'قصور وزراعة القلب' },
+    specialty: { en: 'Clinical Debriefing & Simulation Education', ar: 'التعليم بالمحاكاة واستخلاص المعلومات' },
   },
   {
-    name: { en: 'Dr. Khalid Al-Shaibi, MD, FSCAI', ar: 'د. خالد الشعيبي' },
-    role: { en: 'Vice President & Congress Chair', ar: 'نائب الرئيس ورئيس المؤتمر السنوي' },
-    institution: { en: 'King Fahad Armed Forces Hospital, Jeddah', ar: 'مستشفى الملك فهد للقوات المسلحة، جدة' },
-    specialty: { en: 'Interventional Cardiology', ar: 'القسطرة القلبية التداخلية' },
-  },
-  {
-    name: { en: 'Dr. Husam Al-Faleh, MD, FRCPC', ar: 'د. حسام الفالح' },
-    role: { en: 'Secretary General & JSHA Editor-in-Chief', ar: 'الأمين العام ورئيس تحرير المجلة' },
-    institution: { en: 'King Khalid University Hospital, Riyadh', ar: 'مستشفى الملك خالد الجامعي، الرياض' },
-    specialty: { en: 'Acute Coronary Syndromes & Outcomes', ar: 'متلازمات الشريان التاجي الحادة' },
-  },
-  {
-    name: { en: 'Dr. Reem Al-Malki, MD, FESC', ar: 'د. ريم المالكي' },
-    role: { en: 'Chair, National CPR Committee (NCPR)', ar: 'رئيسة اللجنة الوطنية للإنعاش القلبي' },
+    name: { en: 'Dr. Bandar Al-Otaibi, MD, FACEP', ar: 'د. بندر العتيبي' },
+    role: { en: 'Vice President & Safety Chair', ar: 'نائب الرئيس ورئيس لجنة السلامة' },
     institution: { en: 'King Abdulaziz Medical City, Riyadh', ar: 'مدينة الملك عبدالعزيز الطبية، الرياض' },
-    specialty: { en: 'Critical Care Cardiology & Resuscitation', ar: 'العناية القلبية الحرجة والإنعاش' },
+    specialty: { en: 'Emergency Medicine & In-Situ Simulation', ar: 'طب الطوارئ والمحاكاة الميدانية' },
+  },
+  {
+    name: { en: 'Dr. Fatimah Al-Harbi, PhD, RN', ar: 'د. فاطمة الحربي' },
+    role: { en: 'Secretary General & SJHS Editor', ar: 'الأمينة العامة ورئيسة تحرير المجلة' },
+    institution: { en: 'Princess Nourah University, Riyadh', ar: 'جامعة الأميرة نورة بنت عبدالرحمن، الرياض' },
+    specialty: { en: 'Interprofessional Education & OSCEs', ar: 'التعليم المشترك والاختبارات السريرية' },
+  },
+  {
+    name: { en: 'Eng. Abdullah Al-Zahrani, CHSOS', ar: 'م. عبدالله الزهراني' },
+    role: { en: 'Director of Accreditation & Operations', ar: 'مدير الاعتماد والتشغيل التقني' },
+    institution: { en: 'King Fahad Medical City, Riyadh', ar: 'مدينة الملك فهد الطبية، الرياض' },
+    specialty: { en: 'Simulation Engineering & Lab Accreditation', ar: 'هندسة المحاكاة واعتماد المراكز' },
   },
 ];
 
 export const MEMBERSHIP_TIERS: MembershipTier[] = [
   {
     id: 'fellow',
-    name: { en: 'Active Consultant Fellow', ar: 'زميل استشاري عامل' },
+    name: { en: 'Simulation Educator Fellow', ar: 'زميل ممارس ومدرب محاكاة' },
     annualFeeSar: 500,
-    eligibility: { en: 'Board-certified cardiologists & cardiac surgeons practicing in KSA', ar: 'استشاريو أمراض وجراحة القلب المرخصون في المملكة' },
+    eligibility: {
+      en: 'Faculty, physicians & simulation directors leading accredited programs',
+      ar: 'أعضاء هيئة التدريس والأطباء ومديرو برامج المحاكاة المعتمدة',
+    },
     benefits: [
-      { en: 'Full voting rights in SHA General Assembly & Working Groups', ar: 'حق التصويت الكامل في الجمعية العمومية والمجموعات العلمية' },
-      { en: 'Complimentary registration priority for SHA37 Annual Congress', ar: 'أولوية وخصم التسجيل في المؤتمر السنوي SHA37' },
-      { en: 'Access to SHA Research Grant funding & JSHA fast-track review', ar: 'التقديم على منح الأبحاث العلمية والنشر السريع في JSHA' },
+      { en: 'Voting rights in SSSH General Assembly & SIG leadership', ar: 'حق التصويت في الجمعية العمومية ورئاسة اللجان التخصصية' },
+      { en: '20% fee discount on all SSSH workshops & Annual Forum registration', ar: 'خصم ٢٠٪ على جميع الدورات ورسوم الملتقى السنوي' },
+      { en: 'Eligibility for SSSH Simulation Research Grants & lab peer-review', ar: 'التأهل لمنح أبحاث المحاكاة ولجان اعتماد المراكز' },
     ],
   },
   {
     id: 'associate',
-    name: { en: 'Associate & Fellow-in-Training', ar: 'عضو مشارك وطبيب زمالة' },
+    name: { en: 'Associate & Clinical Trainee', ar: 'عضو مشارك وطبيب متدرب' },
     annualFeeSar: 250,
-    eligibility: { en: 'Cardiology fellows, internal medicine residents & specialist physicians', ar: 'أطباء الزمالة والمقيمون والأطباء الأخصائيون' },
+    eligibility: {
+      en: 'Residency trainees, clinical fellows & undergraduate health educators',
+      ar: 'أطباء الإقامة والزمالة والمعيدون في الكليات الصحية',
+    },
     benefits: [
-      { en: 'Complimentary access to monthly virtual ECG & Cath case webinars', ar: 'حضور مجاني للندوات الشهرية لتخطيط القلب والقسطرة' },
-      { en: 'Eligibility for Young Investigators Travel Grants & Quiz Teams', ar: 'التأهل لمنح الباحثين الشباب ومسابقات الزمالة' },
-      { en: '25% fee reduction across NCPR ACLS & PALS instructor tracks', ar: 'خصم ٢٥٪ على مسارات مدربي دعم الحياة المتقدم' },
+      { en: 'Free access to monthly virtual scenario design & debriefing clinics', ar: 'حضور مجاني للندوات الشهرية لتصميم السيناريوهات' },
+      { en: 'Priority team entry in National SimWars Championship', ar: 'أولوية التسجيل في بطولة تحدي المحاكاة الوطني' },
+      { en: 'Discounted enrollment in SSSH Foundations & CRM workshops', ar: 'رسوم مخفضة في دورات التأسيس وإدارة الأزمات' },
     ],
   },
   {
-    id: 'allied',
-    name: { en: 'Allied Cardiac Health Member', ar: 'عضو التمريض والمهن الصحية المساندة' },
-    annualFeeSar: 150,
-    eligibility: { en: 'Cardiac nurses, perfusionists, echocardiographers & pharmacists', ar: 'تمريض القلب وفنيو القسطرة والأشعة والصيدلة السريرية' },
+    id: 'operations',
+    name: { en: 'Simulation Operations & Allied Health', ar: 'عضو التشغيل والتمريض والمساندة' },
+    annualFeeSar: 200,
+    eligibility: {
+      en: 'Simulation technicians, AV engineers, nurses & SP coordinators',
+      ar: 'فنيو المحاكاة ومهندسو التشغيل والتمريض ومنسقو المرضى المعياريين',
+    },
     benefits: [
-      { en: 'Full access to Allied Health Working Group workshops & guidelines', ar: 'الوصول الكامل لورش عمل وأدلة المهن القلبية المساندة' },
-      { en: 'SCFHS-accredited continuing education credit tracking', ar: 'تتبع ساعات التعليم الطبي المستمر المعتمدة من الهيئة' },
-      { en: 'Reduced SHA37 Congress Allied Health delegate pass', ar: 'تذكرة مخفضة لحضور المؤتمر السنوي SHA37' },
+      { en: 'Full access to Operations SIG technical blueprints & moulage library', ar: 'الوصول الكامل لمكتبة السيناريوهات والأدلة التقنية' },
+      { en: 'SCFHS continuing education & CHSOS prep study group access', ar: 'ساعات تعليم مستمر ومجموعات التحضير للاعتماد المهني' },
+      { en: 'Reduced Annual Simulation Forum delegate pass', ar: 'تذكرة مخفضة لحضور الملتقى السنوي للمحاكاة الصحية' },
     ],
   },
 ];
 
-export const PATIENT_GUIDES: PatientGuide[] = [
+export const LAB_GUIDES: LabGuide[] = [
   {
-    id: 'pg-bp',
-    topic: { en: 'Blood Pressure', ar: 'ضغط الدم' },
+    id: 'lg-bay',
+    topic: { en: 'Center Setup', ar: 'تأسيس المراكز' },
     readingTime: '4 min read',
-    title: { en: 'Understanding Hypertension & Home Blood Pressure Monitoring', ar: 'فهم ارتفاع ضغط الدم وقياسه المنزلي الصحيح' },
+    title: {
+      en: 'Commissioning a Hospital Simulation Bay & Debriefing Room',
+      ar: 'متطلبات تجهيز جناح المحاكاة السريرية وغرفة الاستخلاص بالمستشفى',
+    },
     summary: {
-      en: 'Practical steps for accurate morning and evening cuff readings, sodium moderation in Saudi cuisine, and medication consistency.',
-      ar: 'خطوات عملية للقياس المنزلي الدقيق صباحاً ومساءً وتقليل الصوديوم والالتزام بالعلاج.',
+      en: 'Essential spatial, acoustic, medical gas, and AV layout guidelines for hospitals launching an internal clinical simulation suite.',
+      ar: 'إرشادات المساحة والعزل الصوتي والغازات الطبية وأنظمة البث للمستشفيات التي تؤسس وحدة محاكاة داخلية.',
     },
     keySteps: [
-      { en: 'Rest quietly seated for 5 minutes with back supported and arm at heart level before measuring.', ar: 'الجلوس بهدوء لمدة ٥ دقائق مع إسناد الظهر والذراع بمستوى القلب قبل القياس.' },
-      { en: 'Avoid caffeine, Arabic coffee, or smoking for 30 minutes prior to any home reading.', ar: 'تجنب القهوة والكافيين والتدخين قبل القياس بـ ٣٠ دقيقة.' },
-      { en: 'Keep a 7-day log ahead of your cardiology clinic visit rather than relying on a single reading.', ar: 'تسجيل القراءات لمدة ٧ أيام متتالية لمشاركتها مع طبيب القلب.' },
+      {
+        en: 'Separate control room visibility (one-way glass or IP PTZ camera feeds) from a sound-isolated debriefing room seating 8–12 learners.',
+        ar: 'فصل غرفة التحكم والمراقبة عن قاعة الاستخلاص المعزولة صوتياً والمجهزة لـ ٨ إلى ١٢ متدرباً.',
+      },
+      {
+        en: 'Use non-functional or clearly color-coded air-only medical headwall outlets so simulation learners practice safely without live oxygen hazards.',
+        ar: 'تأمين مخارج الغازات الطبية في غرفة المحاكاة بالهواء الآمن فقط دون مخاطر الأكسجين الحي.',
+      },
+      {
+        en: 'Standardize crash-cart drawers and infusion pumps to match the host hospital clinical wards for authentic transfer of learning.',
+        ar: 'مواءمة تجهيز عربة الطوارئ ومضخات الأدوية مع أجهزة المستشفى الفعلية لتعزيز نقل المهارة للواقع.',
+      },
     ],
   },
   {
-    id: 'pg-cpr',
-    topic: { en: 'Emergency Readiness', ar: 'الاستعداد للطوارئ' },
+    id: 'lg-safety',
+    topic: { en: 'In-Situ Drills', ar: 'التمارين الميدانية' },
     readingTime: '3 min read',
-    title: { en: 'Recognizing Heart Attack Symptoms & Calling 997 Immediately', ar: 'التعرف على أعراض الجلطة القلبية والاتصال الفوري بـ ٩٩٧' },
+    title: {
+      en: 'Pre-Drill Safety Checklist for Live Hospital Wards',
+      ar: 'قائمة السلامة المسبقة لتنفيذ تمارين المحاكاة داخل الأقسام الفعلية',
+    },
     summary: {
-      en: 'Every minute of delay increases myocardial damage. Learn the red-flag signs and why ambulance dispatch outperforms private transport.',
-      ar: 'كل دقيقة تأخير تؤثر على عضلة القلب؛ تعرف على العلامات التحذيرية وأهمية الإسعاف الفوري.',
+      en: 'Mandatory no-go criteria, medication labeling safeguards, and unit charge-nurse signoff before launching an in-situ simulation.',
+      ar: 'معايير الإلغاء الفوري وتمييز أدوية المحاكاة وموافقة رئيس القسم قبل بدء أي تمرين ميداني.',
     },
     keySteps: [
-      { en: 'Central chest pressure, tightness, or burning lasting over 10 minutes—or radiating to jaw, shoulder, or back—requires urgent emergency care.', ar: 'ألم أو ضغط في منتصف الصدر يستمر أكثر من ١٠ دقائق أو يمتد للكتف أو الفك يستدعي الطوارئ فوراً.' },
-      { en: 'Dial 997 (Saudi Red Crescent) immediately; paramedics perform 12-lead ECGs en route and pre-activate cardiac cath labs.', ar: 'اتصل على ٩٩٧ فوراً لتفعيل مسار القسطرة القلبية السريع قبل الوصول للمستشفى.' },
-      { en: 'Never drive yourself to the emergency department during suspected acute chest pain.', ar: 'لا تقُد السيارة بنفسك أبداً عند الاشتباه بألم صدري حاد.' },
+      {
+        en: 'Confirm unit acuity with the charge nurse 30 minutes prior; postpone immediately if real clinical surge or code occurs.',
+        ar: 'التنسيق مع تمريض القسم قبل التمرين بـ ٣٠ دقيقة والتأجيل الفوري عند ارتفاع ضغط الحالات الحقيقية.',
+      },
+      {
+        en: 'Never leave simulated saline vials, unlabeled syringes, or training defibrillator pads inside a patient care bay after debriefing.',
+        ar: 'عدم ترك أي مستلزمات أو محاليل تدريبية داخل غرف المرضى بعد انتهاء التمرين إطلاقاً.',
+      },
+      {
+        en: 'Conduct a 5-minute safety sweep and log any discovered latent safety threats before leaving the clinical ward.',
+        ar: 'إجراء مسح أمان لمدة ٥ دقائق وتوثيق أي ملاحظات سلامة مكتشفة قبل مغادرة القسم.',
+      },
     ],
   },
   {
-    id: 'pg-pci',
-    topic: { en: 'Post-Procedure Recovery', ar: 'التعافي بعد القسطرة' },
+    id: 'lg-debrief',
+    topic: { en: 'Faculty Practice', ar: 'مهارات المدربين' },
     readingTime: '5 min read',
-    title: { en: 'Life After Coronary Stenting: Dual Antiplatelet Adherence & Exercise', ar: 'الحياة بعد دعامات القلب: الالتزام بمميعات الصفيحات والنشاط البدني' },
+    title: {
+      en: 'Structured 3-Phase Debriefing: Reaction, Analysis & Summary',
+      ar: 'مراحل الاستخلاص المنظم الثلاث: الانطباع، التحليل، والتلخيص',
+    },
     summary: {
-      en: 'Essential guidance on never interrupting prescribed antiplatelet medication without cardiologist clearance and pacing structured walking.',
-      ar: 'إرشادات حيوية حول عدم إيقاف مسيلات الصفيحات دون استشارة طبيب القلب والتدرج في المشي.',
+      en: 'A practical facilitator pocket guide for moving teams from emotional decompression to actionable clinical mental models.',
+      ar: 'دليل عملي لمدير الجلسة للانتقال بالمتدربين من تفريغ التوتر إلى ترسيخ المفاهيم السريرية القابلة للتطبيق.',
     },
     keySteps: [
-      { en: 'Never stop aspirin or your second antiplatelet agent (clopidogrel/ticagrelor) before dental or surgical procedures without your cardiologist approval.', ar: 'لا توقف الأسبرين أو الدواء الثاني المضاد للصفيحات قبل أي إجراء دون موافقة طبيب القلب.' },
-      { en: 'Begin supervised cardiac rehabilitation or flat-surface walking at 10–15 minutes daily, advancing gradually.', ar: 'ابدأ برنامج التأهيل القلبي أو المشي المعتدل تدريجياً بإشراف طبي.' },
-      { en: 'Monitor LDL cholesterol at 6–8 weeks post-discharge to confirm protective lipid targets are reached.', ar: 'افحص مستوى الكوليسترول الضار بعد ٦ إلى ٨ أسابيع للتأكد من تحقيق الهدف الوقائي.' },
+      {
+        en: 'Open the Reaction Phase by asking how the team felt, allowing brief emotional decompression before reviewing clinical actions.',
+        ar: 'بدء مرحلة الانطباع بالسؤال عن شعور الفريق وإتاحة التفريغ الهادئ قبل مناقشة الأداء السريري.',
+      },
+      {
+        en: 'Use Advocacy-Inquiry ("I noticed... I was curious what was on your mind...") rather than judgmental questioning during Analysis.',
+        ar: 'استخدام أسلوب الملاحظة والاستقصاء البناء لفهم دافع القرار السريري بدلاً من التوجيه المباشر.',
+      },
+      {
+        en: 'Close the Summary Phase by having each participant state one clinical or teamwork takeaway for their next hospital shift.',
+        ar: 'اختتام الجلسة بطلب ذكر نقطة تطبيقية واحدة من كل مشارك لتطبيقها في مناوبته القادمة.',
+      },
     ],
   },
 ];

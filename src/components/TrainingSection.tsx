@@ -1,32 +1,38 @@
 import { FormEvent, useState } from 'react';
-import { Calendar, CheckCircle2, MapPin, Search, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Calendar, CheckCircle2, CreditCard, MapPin, Search, ShieldAlert, ShieldCheck } from 'lucide-react';
 import {
   CERTIFICATE_REGISTRY,
   CertificateRecord,
   Language,
   TRAINING_CENTERS,
   TRAINING_COURSES,
-  TRAINING_IMAGE,
   TrainingCenter,
   TrainingCourse,
-  UI_COPY,
 } from '../data/shaData';
 import { verifyNcprCertificate } from '../lib/shaSupabaseService';
+import { SiteContentConfig } from '../lib/siteContentService';
 import { ResilientImage } from './ResilientImage';
 
 interface TrainingSectionProps {
   lang: Language;
+  siteContent: SiteContentConfig;
   onReserveCourse: (course: TrainingCourse, center: TrainingCenter) => void;
+  onOpenPaymentPortal: () => void;
 }
 
 type RegionFilter = 'all' | 'riyadh' | 'makkah' | 'eastern' | 'asir' | 'madinah';
 
-export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps) {
-  const [selectedCourseId, setSelectedCourseId] = useState<TrainingCourse['id']>('ACLS');
+export function TrainingSection({
+  lang,
+  siteContent,
+  onReserveCourse,
+  onOpenPaymentPortal,
+}: TrainingSectionProps) {
+  const [selectedCourseId, setSelectedCourseId] = useState<TrainingCourse['id']>('SIM-FAC');
   const [regionFilter, setRegionFilter] = useState<RegionFilter>('all');
 
   // Certificate verification state
-  const [certQuery, setCertQuery] = useState('SHA-NCPR-2026-8841');
+  const [certQuery, setCertQuery] = useState('SSSH-2026-8841');
   const [verifiedCert, setVerifiedCert] = useState<CertificateRecord | null>(CERTIFICATE_REGISTRY[0]);
   const [certNotFound, setCertNotFound] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -72,32 +78,46 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
         {/* Section Header */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mb-12">
           <div className="lg:col-span-7">
-            <p className="font-mono text-xs text-[#991B1B] mb-2">shacpr.org.sa</p>
-            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 mb-3">
-              {UI_COPY.sections.trainingTitle[lang]}
-            </h2>
-            <p className="text-base text-slate-600 leading-relaxed max-w-2xl">
-              {UI_COPY.sections.trainingSubtitle[lang]}
+            <p className="font-mono text-xs text-[#991B1B] mb-2">
+              {lang === 'en' ? 'Accredited Simulation Academy · Online Payment' : 'أكاديمية المحاكاة المعتمدة · دفع إلكتروني'}
             </p>
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 mb-3">
+              {siteContent.sections.trainingTitle[lang]}
+            </h2>
+            <p className="text-base text-slate-600 leading-relaxed max-w-2xl mb-5">
+              {siteContent.sections.trainingSubtitle[lang]}
+            </p>
+            <button
+              type="button"
+              onClick={onOpenPaymentPortal}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 hover:border-slate-400 rounded-lg transition-colors cursor-pointer"
+            >
+              <CreditCard className="w-3.5 h-3.5 text-[#991B1B]" />
+              <span>
+                {lang === 'en'
+                  ? 'Open Payment & Invoice Lookup Portal'
+                  : 'فتح بوابة الدفع والاستعلام عن الفواتير'}
+              </span>
+            </button>
           </div>
 
           <div className="lg:col-span-5">
             <div className="rounded-xl overflow-hidden border border-slate-200 bg-white aspect-[4/3]">
               <ResilientImage
-                src={TRAINING_IMAGE}
+                src={siteContent.images.training}
                 alt={
                   lang === 'en'
-                    ? 'Saudi physicians and nurses practicing ACLS cardiac resuscitation in a simulation center'
-                    : 'أطباء وممرضون يتدربون على الإنعاش القلبي المتقدم في مركز محاكاة سعودي'
+                    ? 'Clinical simulation team practicing high-fidelity crisis resource management in a training bay'
+                    : 'فريق طبي يتدرب على إدارة الأزمات السريرية في مختبر المحاكاة'
                 }
-                fallbackTitle={UI_COPY.sections.trainingTitle[lang]}
+                fallbackTitle={siteContent.sections.trainingTitle[lang]}
                 className="w-full h-full object-cover"
               />
             </div>
             <p className="mt-2 text-xs text-slate-500 italic">
               {lang === 'en'
-                ? 'Fig. 2 — Accredited ACLS team simulation bay, Riyadh Training Center'
-                : 'شكل ٢ — محطة محاكاة دعم الحياة المتقدم المعتمدة بالرياض'}
+                ? 'Fig. 2 — Multidisciplinary simulation bay & Crisis Resource Management drill, Riyadh'
+                : 'شكل ٢ — تمرين إدارة الأزمات السريرية متعدد التخصصات، الرياض'}
             </p>
           </div>
         </div>
@@ -107,6 +127,13 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
             {TRAINING_COURSES.map((course) => {
               const active = course.id === selectedCourseId;
+              const shortLabel: Record<TrainingCourse['id'], { en: string; ar: string }> = {
+                'SIM-FAC': { en: 'Simulation & Debriefing', ar: 'أساسيات المحاكاة' },
+                'SIM-OPS': { en: 'Operations & Moulage', ar: 'عمليات المحاكاة' },
+                INSITU: { en: 'In-Situ Safety', ar: 'المحاكاة الميدانية' },
+                'SP-EDUC': { en: 'SP & OSCE Design', ar: 'المرضى المعياريون' },
+                'CRM-ACLS': { en: 'Code Blue CRM', ar: 'محاكاة الطوارئ' },
+              };
               return (
                 <button
                   key={course.id}
@@ -118,7 +145,7 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
                       : 'bg-white text-slate-700 border border-slate-200 hover:border-slate-300'
                   }`}
                 >
-                  {course.id === 'HEARTSAVER' ? 'Heartsaver AED' : course.id}
+                  {shortLabel[course.id][lang]}
                 </button>
               );
             })}
@@ -151,23 +178,17 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
             <div className="lg:col-span-4 lg:border-s lg:border-slate-200 lg:ps-6 flex flex-row lg:flex-col justify-between gap-4">
               <div>
                 <div className="font-mono text-2xl font-medium text-slate-900 tabular-nums">
-                  {selectedCourse.cmeHours > 0 ? `${selectedCourse.cmeHours} CME` : 'Community'}
+                  {selectedCourse.feeSar.toLocaleString()} {lang === 'en' ? 'SAR' : 'ريال'}
                 </div>
-                <div className="text-xs text-slate-500">
-                  {selectedCourse.cmeHours > 0
-                    ? lang === 'en'
-                      ? 'SCFHS Accredited Hours'
-                      : 'ساعة تعليم طبي مستمر'
-                    : lang === 'en'
-                    ? 'Public Readiness Track'
-                    : 'مسار توعية مجتمعية'}
+                <div className="text-xs text-slate-500 tabular-nums">
+                  {selectedCourse.cmeHours} {lang === 'en' ? 'SCFHS CME Hours · +15% VAT' : 'ساعة تعليم مستمر · +١٥٪ ضريبة'}
                 </div>
               </div>
               <div className="text-xs text-slate-600">
                 <span className="font-mono font-medium text-slate-900 tabular-nums">
                   {matchingCenters.length}
                 </span>{' '}
-                {lang === 'en' ? 'centers with upcoming seats' : 'مراكز متاحة للتسجيل'}
+                {lang === 'en' ? 'accredited centers open' : 'مراكز متاحة للتسجيل'}
               </div>
             </div>
           </div>
@@ -175,11 +196,11 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
 
         {/* Accredited Centers Explorer + Certificate Verifier */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* Left 7 Cols: Accredited Training Centers */}
+          {/* Left 7 Cols: Accredited Simulation Centers */}
           <div className="lg:col-span-7">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
               <h3 className="font-display text-xl font-semibold text-slate-900">
-                {lang === 'en' ? 'Accredited Training Centers' : 'مراكز التدريب المعتمدة'}
+                {lang === 'en' ? 'Select Center & Register' : 'اختر المركز للتسجيل والدفع'}
               </h3>
 
               <div className="flex flex-wrap items-center gap-1.5">
@@ -248,9 +269,9 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
                     <button
                       type="button"
                       onClick={() => onReserveCourse(selectedCourse, center)}
-                      className="px-4 py-2 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-[#991B1B] hover:text-white rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#991B1B]"
+                      className="px-4 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#991B1B]"
                     >
-                      {lang === 'en' ? 'Reserve Seat' : 'حجز مقعد'}
+                      {lang === 'en' ? 'Register & Pay' : 'التسجيل والدفع'}
                     </button>
                   </div>
                 ))}
@@ -258,18 +279,18 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
             )}
           </div>
 
-          {/* Right 5 Cols: Live NCPR Certificate Verifier */}
+          {/* Right 5 Cols: Live Credential Verifier */}
           <div
             id="ncpr-verifier"
             className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6"
           >
             <h3 className="font-display text-xl font-semibold text-slate-900 mb-1.5">
-              {lang === 'en' ? 'Verify NCPR Certificate' : 'التحقق من شهادة الإنعاش القلبي'}
+              {lang === 'en' ? 'Verify Simulation Credential' : 'التحقق من شهادة المحاكاة'}
             </h3>
             <p className="text-xs text-slate-600 mb-5">
               {lang === 'en'
-                ? 'Validate official SHA-NCPR provider cards issued across accredited Saudi centers.'
-                : 'تحقق فورياً من صحة بطاقات الإنعاش القلبي الصادرة عن مراكز الجمعية المعتمدة.'}
+                ? 'Validate official SSSH simulation educator & operations certificates issued across Saudi hubs.'
+                : 'تحقق فورياً من صحة شهادات مدربي وفنيي المحاكاة الصحية المعتمدة.'}
             </p>
 
             <form onSubmit={handleVerifySubmit} className="space-y-3 mb-5">
@@ -282,7 +303,7 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
                   type="text"
                   value={certQuery}
                   onChange={(e) => setCertQuery(e.target.value)}
-                  placeholder="SHA-NCPR-2026-8841"
+                  placeholder="SSSH-2026-8841"
                   className="flex-1 min-w-0 px-3.5 py-2 text-sm font-mono bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-[#991B1B]"
                 />
                 <button
@@ -378,7 +399,7 @@ export function TrainingSection({ lang, onReserveCourse }: TrainingSectionProps)
                 <ShieldCheck className="w-4 h-4 text-[#991B1B] shrink-0 mt-0.5" />
                 <p>
                   {lang === 'en'
-                    ? 'No matching credential found in the active registry. Confirm the exact prefix (e.g., SHA-NCPR-2026-8841).'
+                    ? 'No matching credential found in the active registry. Confirm the exact prefix (e.g., SSSH-2026-8841).'
                     : 'لم يتم العثور على شهادة مطابقة. تأكد من إدخال الرقم بالصيغة الصحيحة.'}
                 </p>
               </div>

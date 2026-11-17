@@ -2,13 +2,21 @@ import { FormEvent, useState } from 'react';
 import { CheckCircle2, Mail, MapPin, Phone } from 'lucide-react';
 import { Language, UI_COPY } from '../data/shaData';
 import { subscribeNewsletter } from '../lib/shaSupabaseService';
+import { SiteContentConfig } from '../lib/siteContentService';
 
 interface FooterProps {
   lang: Language;
+  siteContent: SiteContentConfig;
   onOpenPortal: () => void;
+  onOpenContentManager: () => void;
 }
 
-export function Footer({ lang, onOpenPortal }: FooterProps) {
+export function Footer({
+  lang,
+  siteContent,
+  onOpenPortal,
+  onOpenContentManager,
+}: FooterProps) {
   const [digestEmail, setDigestEmail] = useState('');
   const [digestError, setDigestError] = useState('');
   const [subscribed, setSubscribed] = useState(false);
@@ -42,29 +50,25 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
           {/* Institutional Identity */}
           <div className="lg:col-span-4 space-y-4">
             <h3 className="font-display text-xl font-semibold text-white">
-              {UI_COPY.brand[lang]}
+              {siteContent.brand[lang]}
             </h3>
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
               {lang === 'en'
-                ? 'Official scientific and educational body advancing cardiovascular medicine, accredited life-support training, and clinical guidelines in Saudi Arabia since 1989.'
-                : 'الهيئة العلمية الوطنية لتطوير طب وجراحة القلب وبرامج دعم الحياة والأدلة السريرية في المملكة العربية السعودية منذ عام ١٩٨٩.'}
+                ? 'National scientific society advancing healthcare simulation education, accredited courses, center standards, and patient safety across Saudi Arabia.'
+                : 'الجمعية العلمية الوطنية لتطوير التعليم بالمحاكاة الصحية والدورات المعتمدة ومعايير سلامة المرضى في المملكة العربية السعودية.'}
             </p>
             <div className="space-y-2 text-xs text-slate-400 pt-2">
               <div className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>
-                  {lang === 'en'
-                    ? 'King Saud University Campus, P.O. Box 7805, Riyadh 11472'
-                    : 'المدينة الجامعية بجامعة الملك سعود، ص.ب ٧٨٠٥، الرياض ١١٤٧٢'}
-                </span>
+                <span>{siteContent.contact.address[lang]}</span>
               </div>
               <div className="flex items-center gap-2 font-mono">
                 <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>+966 11 467 1161</span>
+                <span>{siteContent.contact.phone}</span>
               </div>
               <div className="flex items-center gap-2 font-mono">
                 <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>info@saudi-heart.com</span>
+                <span>{siteContent.contact.email}</span>
               </div>
             </div>
           </div>
@@ -111,12 +115,12 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
             <ul className="space-y-2 text-sm">
               <li>
                 <a href="#training" className="hover:text-white transition-colors font-mono text-xs">
-                  shacpr.org.sa
+                  courses.saudisim.org.sa
                 </a>
               </li>
               <li>
                 <a href="#journal" className="hover:text-white transition-colors font-mono text-xs">
-                  j-saudi-heart.com
+                  sjhs.saudisim.org.sa
                 </a>
               </li>
               <li>
@@ -128,18 +132,27 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
                   {UI_COPY.nav.portal[lang]}
                 </button>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={onOpenContentManager}
+                  className="hover:text-white transition-colors text-start cursor-pointer"
+                >
+                  {lang === 'en' ? 'Manage Content (CMS)' : 'إدارة المحتوى والصور'}
+                </button>
+              </li>
             </ul>
           </div>
 
           {/* Clinical Digest Newsletter */}
           <div className="lg:col-span-4 space-y-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {lang === 'en' ? 'Clinical Guidelines & Congress Digest' : 'نشرة الأدلة السريرية والمؤتمرات'}
+              {lang === 'en' ? 'Simulation Courses & Forum Digest' : 'نشرة دورات المحاكاة والملتقى'}
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
               {lang === 'en'
-                ? 'Receive quarterly JSHA issue alerts, updated consensus statements, and SHA37 deadlines.'
-                : 'احصل على إشعارات الأعداد الفصلية للمجلة العلمية وتحديثات الأدلة السريرية ومواعيد المؤتمر.'}
+                ? 'Receive upcoming course dates, SJHS simulation publications, and SSSH27 Forum updates.'
+                : 'احصل على مواعيد الدورات القادمة وإصدارات المجلة العلمية وأخبار الملتقى السنوي.'}
             </p>
 
             {subscribed ? (
@@ -147,8 +160,8 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>
                   {lang === 'en'
-                    ? 'Subscribed to Saudi Heart Association clinical updates.'
-                    : 'تم الاشتراك في النشرة العلمية للجمعية السعودية للقلب.'}
+                    ? 'Subscribed to Saudi Simulation Society updates.'
+                    : 'تم الاشتراك في نشرة الجمعية السعودية للمحاكاة الصحية.'}
                 </span>
               </div>
             ) : (
@@ -187,7 +200,7 @@ export function Footer({ lang, onOpenPortal }: FooterProps) {
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>
-            © {new Date().getFullYear()} {UI_COPY.brand[lang]}.{' '}
+            © {new Date().getFullYear()} {siteContent.brand[lang]}.{' '}
             {lang === 'en' ? 'All rights reserved.' : 'جميع الحقوق محفوظة.'}
           </p>
           <p>

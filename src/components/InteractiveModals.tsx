@@ -1,29 +1,45 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Check, CheckCircle2, Copy, X } from 'lucide-react';
+import {
+  Building2,
+  Check,
+  CheckCircle2,
+  Copy,
+  CreditCard,
+  Receipt,
+  Search,
+  Smartphone,
+  X,
+} from 'lucide-react';
 import {
   GuidelineItem,
   JournalArticle,
+  LabGuide,
   Language,
   MEMBERSHIP_TIERS,
   MembershipTier,
-  PatientGuide,
+  SAMPLE_INVOICES,
+  TRAINING_CENTERS,
+  TRAINING_COURSES,
   TrainingCenter,
   TrainingCourse,
 } from '../data/shaData';
 import {
+  lookupInvoiceById,
+  PaymentReceiptRecord,
   signInMemberWithEmail,
   submitCongressRegistration,
   submitCourseReservation,
   submitMembershipApplication,
+  submitPaymentTransaction,
 } from '../lib/shaSupabaseService';
 
 export type ActiveModal =
-  | { type: 'portal'; preselectedTier?: MembershipTier }
+  | { type: 'portal'; preselectedTier?: MembershipTier; initialTab?: 'checkout' | 'invoices' | 'signin' }
   | { type: 'congress' }
   | { type: 'course'; course: TrainingCourse; center: TrainingCenter }
   | { type: 'guideline'; guideline: GuidelineItem }
   | { type: 'article'; article: JournalArticle }
-  | { type: 'patient-guide'; guide: PatientGuide }
+  | { type: 'lab-guide'; guide: LabGuide }
   | null;
 
 interface InteractiveModalsProps {
@@ -32,27 +48,65 @@ interface InteractiveModalsProps {
   onClose: () => void;
 }
 
+type PaymentMethod = 'mada_card' | 'sadad' | 'apple_pay';
+
 export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsProps) {
-  const [portalMode, setPortalMode] = useState<'apply' | 'signin'>('apply');
-  const [selectedTierId, setSelectedTierId] = useState<string>('fellow');
+  const [portalTab, setPortalTab] = useState<'checkout' | 'invoices' | 'signin'>('checkout');
+
+  // Checkout item selection (for unified Payment Portal)
+  const [checkoutCategory, setCheckoutCategory] = useState<'course' | 'symposium' | 'membership'>('course');
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(TRAINING_COURSES[0].id);
+  const [selectedCenterId, setSelectedCenterId] = useState<string>(TRAINING_CENTERS[0].id);
+  const [selectedTierId, setSelectedTierId] = useState<string>(MEMBERSHIP_TIERS[0].id);
+  const [delegatePass, setDelegatePass] = useState<'physician' | 'non-member' | 'fellow'>('physician');
+
+  // Registrant details
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [scfhsId, setScfhsId] = useState('');
-  const [institution, setInstitution] = useState('');
-  const [delegatePass, setDelegatePass] = useState('physician');
+  const [promoCode, setPromoCode] = useState('');
+
+  // Payment fields
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mada_card');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+
+  // Status & Receipt
   const [formError, setFormError] = useState('');
-  const [submittedMessage, setSubmittedMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [receipt, setReceipt] = useState<PaymentReceiptRecord | null>(null);
+  const [signinMessage, setSigninMessage] = useState('');
   const [copiedCitation, setCopiedCitation] = useState(false);
+
+  // Invoice lookup state
+  const [invoiceQuery, setInvoiceQuery] = useState('INV-SSSH-2026-3041');
+  const [lookedUpInvoice, setLookedUpInvoice] = useState<PaymentReceiptRecord | null>(SAMPLE_INVOICES[0]);
+  const [invoiceNotFound, setInvoiceNotFound] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
 
   useEffect(() => {
     setFormError('');
-    setSubmittedMessage('');
+    setReceipt(null);
+    setSigninMessage('');
     setIsSubmitting(false);
     setCopiedCitation(false);
-    if (modal?.type === 'portal' && modal.preselectedTier) {
-      setPortalMode('apply');
-      setSelectedTierId(modal.preselectedTier.id);
+
+    if (modal?.type === 'portal') {
+      if (modal.preselectedTier) {
+        setPortalTab('checkout');
+        setCheckoutCategory('membership');
+        setSelectedTierId(modal.preselectedTier.id);
+      } else {
+        setPortalTab(modal.initialTab ?? 'checkout');
+      }
+    } else if (modal?.type === 'course') {
+      setCheckoutCategory('course');
+      setSelectedCourseId(modal.course.id);
+      setSelectedCenterId(modal.center.id);
+    } else if (modal?.type === 'congress') {
+      setCheckoutCategory('symposium');
     }
   }, [modal]);
 
@@ -69,7 +123,150 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
 
   const validateEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
-  const handlePortalSubmit = async (e: FormEvent) => {
+  // Calculate active line item & SAR breakdown
+  const getActiveBillingItem = () => {
+    if (modal.type === 'course') {
+      return {
+        registrationType: 'course' as const,
+        itemCode: modal.course.code,
+        itemTitle: `${modal.course.title[lang]} — ${modal.center.city[lang]} (${modal.center.nextSession})`,
+        baseFee: modal.course.feeSar,
+      };
+    }
+
+    if (modal.type === 'congress' || (modal.type === 'portal' && checkoutCategory === 'symposium')) {
+      const fees = { physician: 950, 'non-member': 1450, fellow: 550 };
+      const labels = {
+        physician: lang === 'en' ? 'SSSH27 Member Physician Pass' : 'تذكرة طبيب عضو بالملتقى',
+        'non-member': lang === 'en' ? 'SSSH27 Non-Member Specialist Pass' : 'تذكرة أخصائي غير عضو',
+        fellow: lang === 'en' ? 'SSSH27 Trainee / Operations Pass' : 'تذكرة متدرب / تشغيل محاكاة',
+      };
+      return {
+        registrationType: 'symposium' as const,
+        itemCode: `SSSH27-${delegatePass.toUpperCase()}`,
+        itemTitle: labels[delegatePass],
+        baseFee: fees[delegatePass],
+      };
+    }
+
+    if (checkoutCategory === 'membership') {
+      const tier = MEMBERSHIP_TIERS.find((t) => t.id === selectedTierId) ?? MEMBERSHIP_TIERS[0];
+      return {
+        registrationType: 'membership' as const,
+        itemCode: `SSSH-MEM-${tier.id.toUpperCase()}`,
+        itemTitle: tier.name[lang],
+        baseFee: tier.annualFeeSar,
+      };
+    }
+
+    const course = TRAINING_COURSES.find((c) => c.id === selectedCourseId) ?? TRAINING_COURSES[0];
+    const center = TRAINING_CENTERS.find((c) => c.id === selectedCenterId) ?? TRAINING_CENTERS[0];
+    return {
+      registrationType: 'course' as const,
+      itemCode: course.code,
+      itemTitle: `${course.title[lang]} — ${center.city[lang]} (${center.nextSession})`,
+      baseFee: course.feeSar,
+    };
+  };
+
+  const billingItem = getActiveBillingItem();
+  const hasDiscount = promoCode.trim().toUpperCase() === 'SSSH10';
+  const discountSar = hasDiscount ? Number((billingItem.baseFee * 0.1).toFixed(2)) : 0;
+  const taxableSar = Number((billingItem.baseFee - discountSar).toFixed(2));
+  const vatSar = Number((taxableSar * 0.15).toFixed(2));
+  const totalSar = Number((taxableSar + vatSar).toFixed(2));
+
+  const formatCardInput = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const handleCheckoutSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !validateEmail(email)) {
+      setFormError(
+        lang === 'en'
+          ? 'Please enter your full name and a valid email address.'
+          : 'يرجى إدخال الاسم الكامل وبريد إلكتروني صحيح.'
+      );
+      return;
+    }
+
+    if (paymentMethod === 'mada_card') {
+      const cleanCard = cardNumber.replace(/\s+/g, '');
+      if (cleanCard.length < 12 || !cardExpiry.trim() || cardCvv.trim().length < 3) {
+        setFormError(
+          lang === 'en'
+            ? 'Please enter card number, expiry (MM/YY), and CVV—or choose SADAD / Apple Pay.'
+            : 'يرجى إدخال بيانات البطاقة كاملة أو اختيار الدفع عبر سداد / Apple Pay.'
+        );
+        return;
+      }
+    }
+
+    setFormError('');
+    setIsSubmitting(true);
+
+    try {
+      // Save registration record in its specific table as well as payment_transactions
+      if (billingItem.registrationType === 'course') {
+        const activeCourse =
+          modal.type === 'course'
+            ? modal.course
+            : TRAINING_COURSES.find((c) => c.id === selectedCourseId) ?? TRAINING_COURSES[0];
+        const activeCenter =
+          modal.type === 'course'
+            ? modal.center
+            : TRAINING_CENTERS.find((c) => c.id === selectedCenterId) ?? TRAINING_CENTERS[0];
+
+        await submitCourseReservation({
+          courseCode: activeCourse.code,
+          centerCode: activeCenter.accreditationCode,
+          centerName: activeCenter.name.en,
+          sessionDate: activeCenter.nextSession,
+          traineeName: fullName,
+          email,
+        });
+      } else if (billingItem.registrationType === 'symposium') {
+        await submitCongressRegistration({
+          delegatePass,
+          fullName,
+          email,
+        });
+      } else {
+        await submitMembershipApplication({
+          tierId: selectedTierId,
+          fullName,
+          scfhsId: scfhsId || 'PENDING',
+          institution: 'Healthcare Simulation Member',
+          email,
+        });
+      }
+
+      const generatedReceipt = await submitPaymentTransaction({
+        registrationType: billingItem.registrationType,
+        itemCode: billingItem.itemCode,
+        itemTitle: billingItem.itemTitle,
+        fullName,
+        email,
+        phone,
+        scfhsId,
+        paymentMethod,
+        subtotalSar: billingItem.baseFee,
+        discountSar,
+        vatSar,
+        totalSar,
+      });
+
+      setReceipt(generatedReceipt);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Unable to process registration payment.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignInSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) {
       setFormError(
@@ -77,113 +274,38 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
       );
       return;
     }
-    if (portalMode === 'apply' && (!fullName.trim() || !scfhsId.trim())) {
-      setFormError(
-        lang === 'en'
-          ? 'Full name and SCFHS registration number are required.'
-          : 'الاسم الكامل ورقم تسجيل الهيئة السعودية للتخصصات الصحية مطلوبان.'
-      );
-      return;
-    }
     setFormError('');
     setIsSubmitting(true);
-
     try {
-      if (portalMode === 'signin') {
-        const result = await signInMemberWithEmail(email);
-        if (!result.sent) {
-          setFormError(result.errorMessage ?? 'Unable to send portal link.');
-          return;
-        }
-        setSubmittedMessage(
-          lang === 'en'
-            ? `A one-time member portal access link has been sent to ${email}.`
-            : `تم إرسال رابط الدخول الموحد لبوابة الأعضاء إلى ${email}.`
-        );
-      } else {
-        const result = await submitMembershipApplication({
-          tierId: selectedTierId,
-          fullName,
-          scfhsId,
-          institution,
-          email,
-        });
-        setSubmittedMessage(
-          lang === 'en'
-            ? `Application received for ${fullName}. Reference: ${result.referenceId}.`
-            : `تم استلام طلب العضوية للزميل ${fullName}. الرقم المرجعي للمتابعة: ${result.referenceId}.`
-        );
+      const result = await signInMemberWithEmail(email);
+      if (!result.sent) {
+        setFormError(result.errorMessage ?? 'Unable to send portal link.');
+        return;
       }
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Unable to submit request.');
+      setSigninMessage(
+        lang === 'en'
+          ? `One-time member access link dispatched to ${email}.`
+          : `تم إرسال رابط الدخول الموحد لبوابة الأعضاء إلى ${email}.`
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCongressSubmit = async (e: FormEvent) => {
+  const handleInvoiceLookup = async (e: FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !validateEmail(email)) {
-      setFormError(
-        lang === 'en'
-          ? 'Please provide your full name and a valid email address.'
-          : 'يرجى إدخال الاسم الكامل والبريد الإلكتروني الصحيح.'
-      );
-      return;
-    }
-    setFormError('');
-    setIsSubmitting(true);
-
+    setIsLookingUp(true);
     try {
-      const result = await submitCongressRegistration({
-        delegatePass,
-        fullName,
-        email,
-      });
-      setSubmittedMessage(
-        lang === 'en'
-          ? `SHA37 Delegate Seat Reserved (${result.referenceId}) for ${fullName}. Confirmation dispatched to ${email}.`
-          : `تم حجز مقعد المؤتمر SHA37 (${result.referenceId}) باسم ${fullName} وإرسال التذكرة إلى ${email}.`
-      );
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Unable to register for SHA37.');
+      const match = await lookupInvoiceById(invoiceQuery);
+      if (match) {
+        setLookedUpInvoice(match);
+        setInvoiceNotFound(false);
+      } else {
+        setLookedUpInvoice(null);
+        setInvoiceNotFound(true);
+      }
     } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCourseSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim() || !validateEmail(email)) {
-      setFormError(
-        lang === 'en'
-          ? 'Please enter trainee full name and email address.'
-          : 'يرجى إدخال اسم المتدرب الكامل والبريد الإلكتروني.'
-      );
-      return;
-    }
-    if (modal.type !== 'course') return;
-    setFormError('');
-    setIsSubmitting(true);
-
-    try {
-      const result = await submitCourseReservation({
-        courseCode: modal.course.code,
-        centerCode: modal.center.accreditationCode,
-        centerName: modal.center.name.en,
-        sessionDate: modal.center.nextSession,
-        traineeName: fullName,
-        email,
-      });
-      setSubmittedMessage(
-        lang === 'en'
-          ? `Seat confirmed (${result.referenceId}) for ${modal.course.code} at ${modal.center.name.en} (${modal.center.nextSession}).`
-          : `تم تأكيد حجز المقعد (${result.referenceId}) لدورة ${modal.course.code} في ${modal.center.name.ar}.`
-      );
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Unable to reserve seat.');
-    } finally {
-      setIsSubmitting(false);
+      setIsLookingUp(false);
     }
   };
 
@@ -195,6 +317,11 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
     setTimeout(() => setCopiedCitation(false), 2000);
   };
 
+  const isCheckoutFlow =
+    modal.type === 'course' ||
+    modal.type === 'congress' ||
+    (modal.type === 'portal' && portalTab === 'checkout');
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
@@ -203,24 +330,31 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
       aria-modal="true"
     >
       <div
-        className="w-full max-w-2xl max-h-[88vh] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl p-6 sm:p-8"
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl p-6 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200 mb-6">
           <div>
             {modal.type === 'portal' && (
               <h3 className="font-display text-2xl font-semibold text-slate-900">
-                {lang === 'en' ? 'SHA Member Portal & Fellowship' : 'بوابة أعضاء الجمعية السعودية للقلب'}
+                {lang === 'en'
+                  ? 'Registration, Payment & Member Portal'
+                  : 'بوابة التسجيل والدفع وخدمات الأعضاء'}
               </h3>
             )}
             {modal.type === 'congress' && (
               <h3 className="font-display text-2xl font-semibold text-slate-900">
-                {lang === 'en' ? 'SHA37 Annual Congress Registration' : 'التسجيل في المؤتمر السنوي SHA37'}
+                {lang === 'en'
+                  ? 'SSSH27 Annual Forum Registration & Checkout'
+                  : 'التسجيل والدفع للملتقى السنوي SSSH27'}
               </h3>
             )}
             {modal.type === 'course' && (
               <h3 className="font-display text-2xl font-semibold text-slate-900">
-                {lang === 'en' ? 'Reserve NCPR Training Seat' : 'حجز مقعد تدريب الإنعاش القلبي'}
+                {lang === 'en'
+                  ? 'Simulation Course Registration & Payment'
+                  : 'التسجيل والدفع لدورة المحاكاة الصحية'}
               </h3>
             )}
             {modal.type === 'guideline' && (
@@ -243,7 +377,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                 </h3>
               </div>
             )}
-            {modal.type === 'patient-guide' && (
+            {modal.type === 'lab-guide' && (
               <div>
                 <p className="text-xs font-semibold text-[#991B1B] mb-1">
                   {modal.guide.topic[lang]} · {modal.guide.readingTime}
@@ -265,55 +399,186 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
           </button>
         </div>
 
-        {/* Portal Modal */}
+        {/* Portal Top Tabs */}
         {modal.type === 'portal' && (
-          <div>
-            <div className="flex gap-1 p-1 bg-slate-100 rounded-lg mb-6 w-fit">
-              <button
-                type="button"
-                onClick={() => {
-                  setPortalMode('apply');
-                  setSubmittedMessage('');
-                  setFormError('');
-                }}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                  portalMode === 'apply' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
-                }`}
-              >
-                {lang === 'en' ? 'New Membership' : 'طلب عضوية جديدة'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPortalMode('signin');
-                  setSubmittedMessage('');
-                  setFormError('');
-                }}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                  portalMode === 'signin' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
-                }`}
-              >
-                {lang === 'en' ? 'Member Sign-In' : 'دخول الأعضاء'}
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-lg mb-6 w-fit">
+            <button
+              type="button"
+              onClick={() => {
+                setPortalTab('checkout');
+                setReceipt(null);
+                setFormError('');
+              }}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                portalTab === 'checkout' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              {lang === 'en' ? 'Register & Pay' : 'التسجيل والدفع'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPortalTab('invoices');
+                setFormError('');
+              }}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                portalTab === 'invoices' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              {lang === 'en' ? 'Invoice Lookup' : 'الاستعلام عن الفواتير'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPortalTab('signin');
+                setSigninMessage('');
+                setFormError('');
+              }}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                portalTab === 'signin' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+              }`}
+            >
+              {lang === 'en' ? 'Member Sign-In' : 'دخول الأعضاء'}
+            </button>
+          </div>
+        )}
 
-            {submittedMessage ? (
-              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#065F46] shrink-0 mt-0.5" />
-                <p className="text-sm text-slate-800">{submittedMessage}</p>
+        {/* Unified Registration & Payment Checkout Flow */}
+        {isCheckoutFlow && (
+          <div>
+            {receipt ? (
+              <div className="space-y-5">
+                <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-[#065F46] shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      {receipt.status === 'Paid'
+                        ? lang === 'en'
+                          ? 'Payment Confirmed & Seat Registered'
+                          : 'تم تأكيد الدفع وإتمام التسجيل بنجاح'
+                        : lang === 'en'
+                        ? 'SADAD Invoice Generated — Seat Held for 48 Hours'
+                        : 'تم إصدار فاتورة سداد — المقعد محجوز لمدة ٤٨ ساعة'}
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-1">
+                      {lang === 'en'
+                        ? 'Keep your invoice reference below for verification or reimbursement.'
+                        : 'احتفظ برقم الفاتورة المرجعي أدناه للمراجعة أو الاستعلام.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-[#FAF9F7] border border-slate-200 rounded-xl p-5 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                    <span className="font-mono font-semibold text-slate-900">{receipt.invoiceId}</span>
+                    <span className="font-mono text-slate-600 tabular-nums">{receipt.date}</span>
+                  </div>
+                  <dl className="space-y-2">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-slate-500">{lang === 'en' ? 'Registrant' : 'المسجل'}</dt>
+                      <dd className="font-semibold text-slate-900 text-end">{receipt.fullName}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-slate-500">{lang === 'en' ? 'Item' : 'البند'}</dt>
+                      <dd className="text-slate-800 text-end">{receipt.itemTitle}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-slate-500">{lang === 'en' ? 'Method' : 'طريقة الدفع'}</dt>
+                      <dd className="text-slate-800 text-end">{receipt.paymentMethod}</dd>
+                    </div>
+                    <div className="flex justify-between gap-4 pt-2 border-t border-slate-200">
+                      <dt className="font-semibold text-slate-900">
+                        {lang === 'en' ? 'Total (incl. 15% VAT)' : 'الإجمالي (شامل الضريبة)'}
+                      </dt>
+                      <dd className="font-mono font-semibold text-base text-[#991B1B] tabular-nums">
+                        {receipt.totalSar.toFixed(2)} SAR
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyText(
+                        `SSSH Receipt ${receipt.invoiceId} | ${receipt.fullName} | ${receipt.itemTitle} | ${receipt.totalSar.toFixed(2)} SAR (${receipt.status})`
+                      )
+                    }
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+                  >
+                    {copiedCitation ? <Check className="w-3.5 h-3.5 text-[#065F46]" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedCitation ? 'Receipt Copied' : 'Copy Receipt'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg cursor-pointer"
+                  >
+                    {lang === 'en' ? 'Done' : 'تم'}
+                  </button>
+                </div>
               </div>
             ) : (
-              <form onSubmit={handlePortalSubmit} className="space-y-4">
-                {portalMode === 'apply' && (
-                  <>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                        {lang === 'en' ? 'Membership Category' : 'فئة العضوية'}
-                      </label>
+              <form onSubmit={handleCheckoutSubmit} className="space-y-5">
+                {/* Item Selection when opened from Portal */}
+                {modal.type === 'portal' && (
+                  <div className="p-4 bg-[#FAF9F7] border border-slate-200 rounded-xl space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          { id: 'course', label: { en: 'Course Seat', ar: 'دورة تدريبية' } },
+                          { id: 'symposium', label: { en: 'SSSH27 Forum', ar: 'الملتقى السنوي' } },
+                          { id: 'membership', label: { en: 'Membership', ar: 'العضوية' } },
+                        ] as const
+                      ).map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setCheckoutCategory(cat.id)}
+                          className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+                            checkoutCategory === cat.id
+                              ? 'bg-white border-[#991B1B] text-[#991B1B]'
+                              : 'bg-transparent border-slate-200 text-slate-600'
+                          }`}
+                        >
+                          {cat.label[lang]}
+                        </button>
+                      ))}
+                    </div>
+
+                    {checkoutCategory === 'course' && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <select
+                          value={selectedCourseId}
+                          onChange={(e) => setSelectedCourseId(e.target.value)}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900"
+                        >
+                          {TRAINING_COURSES.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.title[lang]} ({c.feeSar} SAR)
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={selectedCenterId}
+                          onChange={(e) => setSelectedCenterId(e.target.value)}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900"
+                        >
+                          {TRAINING_CENTERS.map((ctr) => (
+                            <option key={ctr.id} value={ctr.id}>
+                              {ctr.city[lang]} — {ctr.nextSession}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {checkoutCategory === 'membership' && (
                       <select
                         value={selectedTierId}
                         onChange={(e) => setSelectedTierId(e.target.value)}
-                        className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg text-slate-900"
                       >
                         {MEMBERSHIP_TIERS.map((t) => (
                           <option key={t.id} value={t.id}>
@@ -321,65 +586,221 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                           </option>
                         ))}
                       </select>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          {lang === 'en' ? 'Full Name & Title' : 'الاسم الكامل واللقب'}
-                        </label>
-                        <input
-                          type="text"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          placeholder={lang === 'en' ? 'Dr. Abdullah Al-Qahtani' : 'د. عبدالله القحطاني'}
-                          className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          {lang === 'en' ? 'SCFHS Registration No.' : 'رقم تصنيف الهيئة'}
-                        </label>
-                        <input
-                          type="text"
-                          value={scfhsId}
-                          onChange={(e) => setScfhsId(e.target.value)}
-                          placeholder="21-R-M-004821"
-                          className="w-full px-3.5 py-2 text-sm font-mono bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                        {lang === 'en' ? 'Hospital / Medical City' : 'المستشفى / المدينة الطبية'}
-                      </label>
-                      <input
-                        type="text"
-                        value={institution}
-                        onChange={(e) => setInstitution(e.target.value)}
-                        placeholder={
-                          lang === 'en'
-                            ? 'King Fahad Medical City, Riyadh'
-                            : 'مدينة الملك فهد الطبية، الرياض'
-                        }
-                        className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                      />
-                    </div>
-                  </>
+                    )}
+                  </div>
                 )}
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    {lang === 'en' ? 'Official Work Email' : 'البريد الإلكتروني المهني'}
+                {(modal.type === 'congress' ||
+                  (modal.type === 'portal' && checkoutCategory === 'symposium')) && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      {lang === 'en' ? 'Delegate Pass Category' : 'فئة تذكرة الملتقى'}
+                    </label>
+                    <select
+                      value={delegatePass}
+                      onChange={(e) =>
+                        setDelegatePass(e.target.value as 'physician' | 'non-member' | 'fellow')
+                      }
+                      className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
+                    >
+                      <option value="physician">
+                        {lang === 'en'
+                          ? 'SSSH Member Physician — 950 SAR'
+                          : 'طبيب عضو بالجمعية — ٩٥٠ ريال'}
+                      </option>
+                      <option value="non-member">
+                        {lang === 'en'
+                          ? 'Non-Member Specialist — 1,450 SAR'
+                          : 'أخصائي غير عضو — ١,٤٥٠ ريال'}
+                      </option>
+                      <option value="fellow">
+                        {lang === 'en'
+                          ? 'Trainee / Simulation Operations — 550 SAR'
+                          : 'متدرب / عمليات محاكاة — ٥٥٠ ريال'}
+                      </option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Order Summary Box */}
+                <div className="bg-[#FAF9F7] border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
+                  <div className="flex justify-between gap-4 font-semibold text-slate-900">
+                    <span>{billingItem.itemTitle}</span>
+                    <span className="font-mono tabular-nums whitespace-nowrap">
+                      {billingItem.baseFee.toFixed(2)} SAR
+                    </span>
+                  </div>
+                  {hasDiscount && (
+                    <div className="flex justify-between gap-4 text-[#065F46]">
+                      <span>{lang === 'en' ? 'SSSH Member Discount (10%)' : 'خصم الأعضاء (١٠٪)'}</span>
+                      <span className="font-mono tabular-nums">-{discountSar.toFixed(2)} SAR</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-4 text-slate-600">
+                    <span>{lang === 'en' ? 'VAT (15%)' : 'ضريبة القيمة المضافة (١٥٪)'}</span>
+                    <span className="font-mono tabular-nums">{vatSar.toFixed(2)} SAR</span>
+                  </div>
+                  <div className="flex justify-between gap-4 pt-2 border-t border-slate-200 text-sm font-semibold text-slate-900">
+                    <span>{lang === 'en' ? 'Total Due' : 'المبلغ الإجمالي'}</span>
+                    <span className="font-mono text-[#991B1B] tabular-nums">
+                      {totalSar.toFixed(2)} SAR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Registrant Info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {lang === 'en' ? 'Full Name' : 'الاسم الكامل'}
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder={lang === 'en' ? 'Dr. Abdullah Al-Qahtani' : 'د. عبدالله القحطاني'}
+                      className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {lang === 'en' ? 'Email for Receipt & Certificate' : 'البريد الإلكتروني'}
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="educator@hospital.med.sa"
+                      className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {lang === 'en' ? 'Mobile Number' : 'رقم الجوال'}
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+966 50 123 4567"
+                      className="w-full px-3.5 py-2 text-sm font-mono bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {lang === 'en' ? 'SCFHS ID / Promo (Try SSSH10)' : 'رقم الهيئة / كود خصم (SSSH10)'}
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={scfhsId}
+                        onChange={(e) => setScfhsId(e.target.value)}
+                        placeholder="21-R-M-0481"
+                        className="w-1/2 px-3 py-2 text-xs font-mono bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                      />
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        placeholder="SSSH10"
+                        className="w-1/2 px-3 py-2 text-xs font-mono uppercase bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Method Selector */}
+                <div className="space-y-3 pt-1">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    {lang === 'en' ? 'Payment Method' : 'وسيلة الدفع'}
                   </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="physician@hospital.med.sa"
-                    className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('mada_card')}
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold rounded-lg border cursor-pointer ${
+                        paymentMethod === 'mada_card'
+                          ? 'border-[#991B1B] bg-[#991B1B]/5 text-[#991B1B]'
+                          : 'border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>{lang === 'en' ? 'mada / Card' : 'مدى / بطاقة'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('sadad')}
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold rounded-lg border cursor-pointer ${
+                        paymentMethod === 'sadad'
+                          ? 'border-[#991B1B] bg-[#991B1B]/5 text-[#991B1B]'
+                          : 'border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>{lang === 'en' ? 'SADAD / PO' : 'سداد'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('apple_pay')}
+                      className={`flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-semibold rounded-lg border cursor-pointer ${
+                        paymentMethod === 'apple_pay'
+                          ? 'border-[#991B1B] bg-[#991B1B]/5 text-[#991B1B]'
+                          : 'border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Apple Pay</span>
+                    </button>
+                  </div>
+
+                  {paymentMethod === 'mada_card' && (
+                    <div className="grid grid-cols-12 gap-3 p-3.5 bg-[#FAF9F7] border border-slate-200 rounded-lg">
+                      <div className="col-span-12 sm:col-span-6">
+                        <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                          {lang === 'en' ? 'Card Number' : 'رقم البطاقة'}
+                        </label>
+                        <input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(formatCardInput(e.target.value))}
+                          placeholder="4578 •••• •••• 1124"
+                          className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-md"
+                        />
+                      </div>
+                      <div className="col-span-6 sm:col-span-3">
+                        <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                          {lang === 'en' ? 'Expiry' : 'الانتهاء'}
+                        </label>
+                        <input
+                          type="text"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(e.target.value.slice(0, 5))}
+                          placeholder="08/29"
+                          className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-md"
+                        />
+                      </div>
+                      <div className="col-span-6 sm:col-span-3">
+                        <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                          CVV
+                        </label>
+                        <input
+                          type="password"
+                          value={cardCvv}
+                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          placeholder="•••"
+                          className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-md"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === 'sadad' && (
+                    <p className="text-xs text-slate-600 p-3 bg-[#FAF9F7] border border-slate-200 rounded-lg">
+                      {lang === 'en'
+                        ? 'Generates an official SADAD Biller 904 invoice number valid for 48 hours for personal banking or hospital finance settlement.'
+                        : 'يتم إصدار رقم فاتورة سداد رسمي (رمز المفوتر ٩٠٤) صالح لمدة ٤٨ ساعة للسداد الفردي أو المؤسسي.'}
+                    </p>
+                  )}
                 </div>
 
                 {formError && <p className="text-xs font-medium text-[#991B1B]">{formError}</p>}
@@ -395,18 +816,146 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer"
+                    className="px-5 py-2.5 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer tabular-nums"
                   >
                     {isSubmitting
                       ? lang === 'en'
-                        ? 'Submitting...'
-                        : 'جاري الإرسال...'
-                      : portalMode === 'apply'
+                        ? 'Processing...'
+                        : 'جاري التنفيذ...'
+                      : paymentMethod === 'sadad'
                       ? lang === 'en'
-                        ? 'Submit Application'
-                        : 'إرسال طلب العضوية'
+                        ? `Generate SADAD Invoice (${totalSar.toFixed(2)} SAR)`
+                        : `إصدار فاتورة سداد (${totalSar.toFixed(2)} ريال)`
                       : lang === 'en'
-                      ? 'Send Portal Link'
+                      ? `Pay ${totalSar.toFixed(2)} SAR & Register`
+                      : `دفع ${totalSar.toFixed(2)} ريال وإتمام التسجيل`}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* Invoice Lookup Tab */}
+        {modal.type === 'portal' && portalTab === 'invoices' && (
+          <div className="space-y-5">
+            <form onSubmit={handleInvoiceLookup} className="space-y-3">
+              <label className="block text-xs font-semibold text-slate-700">
+                {lang === 'en' ? 'Search Invoice / Payment Reference' : 'البحث برقم الفاتورة المرجعي'}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={invoiceQuery}
+                  onChange={(e) => setInvoiceQuery(e.target.value)}
+                  placeholder="INV-SSSH-2026-3041"
+                  className="flex-1 min-w-0 px-3.5 py-2 text-sm font-mono bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                />
+                <button
+                  type="submit"
+                  disabled={isLookingUp}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>{isLookingUp ? '...' : lang === 'en' ? 'Lookup' : 'بحث'}</span>
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+                <span>{lang === 'en' ? 'Samples:' : 'أمثلة:'}</span>
+                {SAMPLE_INVOICES.map((inv) => (
+                  <button
+                    key={inv.invoiceId}
+                    type="button"
+                    onClick={() => {
+                      setInvoiceQuery(inv.invoiceId);
+                      setLookedUpInvoice(inv);
+                      setInvoiceNotFound(false);
+                    }}
+                    className="font-mono text-slate-700 hover:text-[#991B1B] underline cursor-pointer"
+                  >
+                    {inv.invoiceId}
+                  </button>
+                ))}
+              </div>
+            </form>
+
+            {lookedUpInvoice && (
+              <div className="p-5 bg-[#FAF9F7] border border-slate-200 rounded-xl space-y-2.5 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                  <span className="inline-flex items-center gap-1.5 font-mono font-semibold text-slate-900">
+                    <Receipt className="w-3.5 h-3.5 text-[#991B1B]" />
+                    {lookedUpInvoice.invoiceId}
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      lookedUpInvoice.status === 'Paid' ? 'text-[#065F46]' : 'text-amber-800'
+                    }`}
+                  >
+                    {lookedUpInvoice.status}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">{lang === 'en' ? 'Registrant' : 'المستفيد'}</span>
+                  <span className="font-semibold text-slate-900">{lookedUpInvoice.fullName}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">{lang === 'en' ? 'Registration' : 'الدورة / البند'}</span>
+                  <span className="text-slate-800 text-end">{lookedUpInvoice.itemTitle}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">{lang === 'en' ? 'Amount Paid' : 'المبلغ'}</span>
+                  <span className="font-mono font-semibold text-slate-900 tabular-nums">
+                    {lookedUpInvoice.totalSar.toFixed(2)} SAR ({lookedUpInvoice.paymentMethod})
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {invoiceNotFound && (
+              <p className="text-xs text-[#991B1B]">
+                {lang === 'en'
+                  ? 'No invoice found with that reference ID.'
+                  : 'لم يتم العثور على فاتورة بهذا الرقم.'}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Member Sign-In Tab */}
+        {modal.type === 'portal' && portalTab === 'signin' && (
+          <div>
+            {signinMessage ? (
+              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-[#065F46] shrink-0 mt-0.5" />
+                <p className="text-sm text-slate-800">{signinMessage}</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSignInSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    {lang === 'en' ? 'Registered Member Email' : 'البريد الإلكتروني للعضو'}
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="educator@hospital.med.sa"
+                    className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg"
+                  />
+                </div>
+                {formError && <p className="text-xs font-medium text-[#991B1B]">{formError}</p>}
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg cursor-pointer"
+                  >
+                    {isSubmitting
+                      ? lang === 'en'
+                        ? 'Sending...'
+                        : 'جاري الإرسال...'
+                      : lang === 'en'
+                      ? 'Send Magic Portal Link'
                       : 'إرسال رابط الدخول'}
                   </button>
                 </div>
@@ -415,186 +964,15 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
           </div>
         )}
 
-        {/* Congress Registration Modal */}
-        {modal.type === 'congress' && (
-          <div>
-            <p className="text-sm text-slate-600 mb-5">
-              {lang === 'en'
-                ? 'March 25–27, 2027 · Crowne Plaza RDC, Riyadh · Includes 24 SCFHS CME Hours & Scientific Proceedings.'
-                : '٢٥–٢٧ مارس ٢٠٢٧ · كراون بلازا المدينة الرقمية، الرياض · يشمل ٢٤ ساعة تعليم طبي مستمر.'}
-            </p>
-
-            {submittedMessage ? (
-              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#065F46] shrink-0 mt-0.5" />
-                <p className="text-sm text-slate-800">{submittedMessage}</p>
-              </div>
-            ) : (
-              <form onSubmit={handleCongressSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    {lang === 'en' ? 'Delegate Pass Type' : 'فئة تذكرة المؤتمر'}
-                  </label>
-                  <select
-                    value={delegatePass}
-                    onChange={(e) => setDelegatePass(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                  >
-                    <option value="physician">
-                      {lang === 'en'
-                        ? 'SHA Member Physician — 950 SAR'
-                        : 'طبيب عضو بالجمعية — ٩٥٠ ريال'}
-                    </option>
-                    <option value="non-member">
-                      {lang === 'en'
-                        ? 'Non-Member Specialist — 1,450 SAR'
-                        : 'طبيب أخصائي غير عضو — ١,٤٥٠ ريال'}
-                    </option>
-                    <option value="fellow">
-                      {lang === 'en'
-                        ? 'Fellow / Resident / Allied Health — 550 SAR'
-                        : 'طبيب زمالة / تمريض / مهن مساندة — ٥٥٠ ريال'}
-                    </option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      {lang === 'en' ? 'Delegate Name' : 'اسم المشارك'}
-                    </label>
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder={lang === 'en' ? 'Dr. Salma Al-Mutairi' : 'د. سلمى المطيري'}
-                      className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      {lang === 'en' ? 'Email Address' : 'البريد الإلكتروني'}
-                    </label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="delegate@hospital.sa"
-                      className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                    />
-                  </div>
-                </div>
-
-                {formError && <p className="text-xs font-medium text-[#991B1B]">{formError}</p>}
-
-                <div className="pt-2 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
-                  >
-                    {lang === 'en' ? 'Close' : 'إغلاق'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer"
-                  >
-                    {isSubmitting
-                      ? lang === 'en'
-                        ? 'Registering...'
-                        : 'جاري التسجيل...'
-                      : lang === 'en'
-                      ? 'Confirm Registration'
-                      : 'تأكيد التسجيل'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* NCPR Course Reservation Modal */}
-        {modal.type === 'course' && (
-          <div>
-            <div className="bg-[#FAF9F7] border border-slate-200 rounded-lg p-4 mb-5 space-y-1 text-xs">
-              <div className="font-semibold text-slate-900">{modal.course.title[lang]}</div>
-              <div className="text-slate-600">{modal.center.name[lang]}</div>
-              <div className="font-mono text-slate-500">
-                {modal.center.accreditationCode} · {modal.center.nextSession}
-              </div>
-            </div>
-
-            {submittedMessage ? (
-              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#065F46] shrink-0 mt-0.5" />
-                <p className="text-sm text-slate-800">{submittedMessage}</p>
-              </div>
-            ) : (
-              <form onSubmit={handleCourseSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    {lang === 'en' ? 'Trainee Full Name' : 'اسم المتدرب الكامل'}
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder={lang === 'en' ? 'Tariq Mohammed Al-Harthi' : 'طارق محمد الحارثي'}
-                    className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    {lang === 'en' ? 'Email for E-Card Delivery' : 'البريد الإلكتروني لاستلام البطاقة'}
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="clinician@health.sa"
-                    className="w-full px-3.5 py-2 text-sm bg-[#FAF9F7] border border-slate-300 rounded-lg text-slate-900"
-                  />
-                </div>
-                {formError && <p className="text-xs font-medium text-[#991B1B]">{formError}</p>}
-
-                <div className="pt-2 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
-                  >
-                    {lang === 'en' ? 'Cancel' : 'إلغاء'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-5 py-2 text-xs font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 rounded-lg cursor-pointer"
-                  >
-                    {isSubmitting
-                      ? lang === 'en'
-                        ? 'Reserving...'
-                        : 'جاري الحجز...'
-                      : lang === 'en'
-                      ? 'Reserve Seat'
-                      : 'تأكيد الحجز'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* Clinical Guideline Reader */}
+        {/* Simulation Standards Reader */}
         {modal.type === 'guideline' && (
           <div className="space-y-6">
             <p className="text-sm text-slate-700 leading-relaxed">
               {modal.guideline.summary[lang]}
             </p>
-
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">
-                {lang === 'en' ? 'Key Class I Recommendations' : 'أبرز توصيات الفئة الأولى (Class I)'}
+                {lang === 'en' ? 'Key Simulation Practice Standards' : 'أبرز المعايير التطبيقية'}
               </h4>
               <div className="border border-slate-200 rounded-lg divide-y divide-slate-200">
                 {modal.guideline.recommendations.map((rec, i) => (
@@ -607,7 +985,6 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                 ))}
               </div>
             </div>
-
             <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <p className="font-mono text-xs text-slate-500">{modal.guideline.citation}</p>
               <button
@@ -630,7 +1007,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
           </div>
         )}
 
-        {/* JSHA Article Abstract Reader */}
+        {/* Journal Abstract Reader */}
         {modal.type === 'article' && (
           <div className="space-y-5">
             <p className="text-xs font-medium text-slate-600">{modal.article.authors}</p>
@@ -649,7 +1026,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
               <button
                 type="button"
                 onClick={() =>
-                  copyText(`${modal.article.authors} ${modal.article.title.en}. J Saudi Heart Assoc. doi:${modal.article.doi}`)
+                  copyText(`${modal.article.authors} ${modal.article.title.en}. SJHS. doi:${modal.article.doi}`)
                 }
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
               >
@@ -668,8 +1045,8 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
           </div>
         )}
 
-        {/* Patient Health Pamphlet */}
-        {modal.type === 'patient-guide' && (
+        {/* Lab Guide Reader */}
+        {modal.type === 'lab-guide' && (
           <div className="space-y-5">
             <p className="text-sm text-slate-700 leading-relaxed">{modal.guide.summary[lang]}</p>
             <ol className="space-y-3">

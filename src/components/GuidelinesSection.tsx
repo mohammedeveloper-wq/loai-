@@ -4,26 +4,27 @@ import {
   GUIDELINES,
   GuidelineItem,
   Language,
-  UI_COPY,
   WORKING_GROUPS,
 } from '../data/shaData';
+import { SiteContentConfig } from '../lib/siteContentService';
 
 interface GuidelinesSectionProps {
   lang: Language;
+  siteContent: SiteContentConfig;
   onSelectGuideline: (guideline: GuidelineItem) => void;
 }
 
-type CategoryFilter = 'all' | 'coronary' | 'heart-failure' | 'prevention' | 'electrophysiology';
+type CategoryFilter = 'all' | 'debriefing' | 'insitu' | 'sp-osce' | 'operations';
 
-export function GuidelinesSection({ lang, onSelectGuideline }: GuidelinesSectionProps) {
+export function GuidelinesSection({ lang, siteContent, onSelectGuideline }: GuidelinesSectionProps) {
   const [filter, setFilter] = useState<CategoryFilter>('all');
 
   const filterOptions: { key: CategoryFilter; label: { en: string; ar: string } }[] = [
-    { key: 'all', label: { en: 'All Guidelines', ar: 'جميع الأدلة' } },
-    { key: 'coronary', label: { en: 'Coronary & ACS', ar: 'الشرايين التاجية' } },
-    { key: 'heart-failure', label: { en: 'Heart Failure', ar: 'قصور القلب' } },
-    { key: 'prevention', label: { en: 'Prevention', ar: 'الوقاية والدهون' } },
-    { key: 'electrophysiology', label: { en: 'Electrophysiology', ar: 'كهربائية القلب' } },
+    { key: 'all', label: { en: 'All Standards', ar: 'جميع المعايير' } },
+    { key: 'debriefing', label: { en: 'Debriefing', ar: 'الاستخلاص' } },
+    { key: 'insitu', label: { en: 'In-Situ Safety', ar: 'المحاكاة الميدانية' } },
+    { key: 'sp-osce', label: { en: 'SP & OSCE', ar: 'المرضى المعياريون' } },
+    { key: 'operations', label: { en: 'Operations', ar: 'التشغيل والتقنية' } },
   ];
 
   const visibleGuidelines =
@@ -35,10 +36,10 @@ export function GuidelinesSection({ lang, onSelectGuideline }: GuidelinesSection
         {/* Section Header */}
         <div className="max-w-3xl mb-10">
           <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 mb-3">
-            {UI_COPY.sections.guidelinesTitle[lang]}
+            {siteContent.sections.guidelinesTitle[lang]}
           </h2>
           <p className="text-base text-slate-600 leading-relaxed">
-            {UI_COPY.sections.guidelinesSubtitle[lang]}
+            {siteContent.sections.guidelinesSubtitle[lang]}
           </p>
         </div>
 
@@ -124,10 +125,10 @@ export function GuidelinesSection({ lang, onSelectGuideline }: GuidelinesSection
           <aside className="lg:col-span-5 bg-[#FAF9F7] border border-slate-200 rounded-xl p-6 sm:p-7">
             <div className="flex items-baseline justify-between gap-4 pb-4 border-b border-slate-200 mb-4">
               <h3 className="font-display text-xl font-semibold text-slate-900">
-                {UI_COPY.sections.workingGroupsTitle[lang]}
+                {siteContent.sections.workingGroupsTitle[lang]}
               </h3>
               <span className="font-mono text-xs text-slate-500 tabular-nums">
-                {WORKING_GROUPS.length} {lang === 'en' ? 'chapters' : 'مجموعات'}
+                {WORKING_GROUPS.length} {lang === 'en' ? 'groups' : 'مجموعات'}
               </span>
             </div>
 

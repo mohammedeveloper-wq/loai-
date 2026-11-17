@@ -2,23 +2,23 @@ import { useState } from 'react';
 import { ArrowUpRight, BookMarked, Calendar, Clock, MapPin } from 'lucide-react';
 import {
   CONFERENCE_DAYS,
-  CONFERENCE_IMAGE,
   JOURNAL_ARTICLES,
-  JOURNAL_IMAGE,
   JournalArticle,
   Language,
-  UI_COPY,
 } from '../data/shaData';
+import { SiteContentConfig } from '../lib/siteContentService';
 import { ResilientImage } from './ResilientImage';
 
 interface CongressAndJournalSectionProps {
   lang: Language;
+  siteContent: SiteContentConfig;
   onOpenCongress: () => void;
   onSelectArticle: (article: JournalArticle) => void;
 }
 
 export function CongressAndJournalSection({
   lang,
+  siteContent,
   onOpenCongress,
   onSelectArticle,
 }: CongressAndJournalSectionProps) {
@@ -39,32 +39,32 @@ export function CongressAndJournalSection({
             <div className="lg:col-span-5 space-y-6">
               <div>
                 <p className="font-mono text-xs text-[#991B1B] mb-2">
-                  {lang === 'en' ? 'March 25–27, 2027 · Riyadh' : '٢٥–٢٧ مارس ٢٠٢٧ · الرياض'}
+                  {lang === 'en' ? 'February 16–18, 2027 · Riyadh' : '١٦–١٨ فبراير ٢٠٢٧ · الرياض'}
                 </p>
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 mb-3">
-                  {UI_COPY.sections.congressTitle[lang]}
+                  {siteContent.sections.congressTitle[lang]}
                 </h2>
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                  {UI_COPY.sections.congressSubtitle[lang]}
+                  {siteContent.sections.congressSubtitle[lang]}
                 </p>
               </div>
 
               <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-[4/3]">
                 <ResilientImage
-                  src={CONFERENCE_IMAGE}
+                  src={siteContent.images.conference}
                   alt={
                     lang === 'en'
-                      ? 'International cardiology keynote lecture inside the Riyadh congress auditorium'
-                      : 'محاضرة رئيسية في مؤتمر أمراض القلب بالرياض'
+                      ? 'International healthcare simulation keynote lecture inside the Riyadh forum auditorium'
+                      : 'محاضرة رئيسية في الملتقى السعودي للمحاكاة الصحية بالرياض'
                   }
-                  fallbackTitle={UI_COPY.sections.congressTitle[lang]}
+                  fallbackTitle={siteContent.sections.congressTitle[lang]}
                   className="w-full h-full object-cover"
                 />
               </div>
               <p className="text-xs text-slate-500 italic -mt-3">
                 {lang === 'en'
-                  ? 'Fig. 3 — Plenary scientific session at Crowne Plaza RDC Auditorium, Riyadh'
-                  : 'شكل ٣ — الجلسة العلمية العامة في قاعة المؤتمرات بالمدينة الرقمية، الرياض'}
+                  ? 'Fig. 3 — Plenary simulation session at Riyadh Medical Convention Auditorium'
+                  : 'شكل ٣ — الجلسة العلمية العامة في قاعة الملتقى بالرياض'}
               </p>
 
               <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200">
@@ -76,7 +76,7 @@ export function CongressAndJournalSection({
                     </span>
                   </div>
                   <div className="font-mono text-xs text-slate-500 tabular-nums">
-                    {lang === 'en' ? '24 SCFHS CME Accredited Hours' : '٢٤ ساعة تعليم طبي مستمر'}
+                    {lang === 'en' ? '30 SCFHS CME Accredited Hours' : '٣٠ ساعة تعليم طبي مستمر'}
                   </div>
                 </div>
 
@@ -162,19 +162,19 @@ export function CongressAndJournalSection({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-slate-200">
             <div className="max-w-2xl">
               <p className="font-mono text-xs text-slate-500 mb-2">
-                j-saudi-heart.com · ISSN 1016-7315
+                sjhs.saudisim.org.sa · ISSN 2468-9012
               </p>
               <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900 mb-2">
-                {UI_COPY.sections.journalTitle[lang]}
+                {siteContent.sections.journalTitle[lang]}
               </h2>
               <p className="text-base text-slate-600 leading-relaxed">
-                {UI_COPY.sections.journalSubtitle[lang]}
+                {siteContent.sections.journalSubtitle[lang]}
               </p>
             </div>
             <div className="text-xs text-slate-500 shrink-0">
               {lang === 'en'
-                ? 'Open Access · Indexed in PubMed & Scopus'
-                : 'وصول مفتوح · مفهرسة في PubMed و Scopus'}
+                ? 'Open Access · Peer-Reviewed Simulation Research'
+                : 'وصول مفتوح · أبحاث محكمة في المحاكاة الصحية'}
             </div>
           </div>
 
@@ -184,13 +184,13 @@ export function CongressAndJournalSection({
             <article className="lg:col-span-7 bg-white border border-slate-200 rounded-xl overflow-hidden">
               <div className="aspect-[16/10] bg-slate-100 border-b border-slate-200">
                 <ResilientImage
-                  src={JOURNAL_IMAGE}
+                  src={siteContent.images.journal}
                   alt={
                     lang === 'en'
-                      ? 'Cardiovascular imaging workstation displaying cardiac MRI and echocardiography beside peer-reviewed journals'
-                      : 'محطة أبحاث التصوير القلبي والمجلات العلمية المحكمة'
+                      ? 'Medical simulation debriefing control room and clinical video evaluation console'
+                      : 'غرفة التحكم والاستخلاص في مركز المحاكاة الطبية'
                   }
-                  fallbackTitle={UI_COPY.sections.journalTitle[lang]}
+                  fallbackTitle={siteContent.sections.journalTitle[lang]}
                   className="w-full h-full object-cover"
                 />
               </div>

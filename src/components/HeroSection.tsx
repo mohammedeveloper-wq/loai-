@@ -1,18 +1,21 @@
 import { ArrowUpRight, Globe, ShieldCheck } from 'lucide-react';
-import { HERO_IMAGE, Language, UI_COPY } from '../data/shaData';
+import { Language } from '../data/shaData';
+import { SiteContentConfig } from '../lib/siteContentService';
 import { ResilientImage } from './ResilientImage';
 
 interface HeroSectionProps {
   lang: Language;
+  siteContent: SiteContentConfig;
   onToggleLang: () => void;
-  onOpenCongress: () => void;
+  onOpenPaymentPortal: () => void;
   onJumpToVerifier: () => void;
 }
 
 export function HeroSection({
   lang,
+  siteContent,
   onToggleLang,
-  onOpenCongress,
+  onOpenPaymentPortal,
   onJumpToVerifier,
 }: HeroSectionProps) {
   return (
@@ -24,36 +27,36 @@ export function HeroSection({
           <div className="lg:col-span-6 flex flex-col justify-between py-2">
             <div>
               <p className="text-xs font-medium tracking-wide text-slate-500 mb-5">
-                {UI_COPY.hero.eyebrow[lang]}
+                {siteContent.hero.eyebrow[lang]}
               </p>
 
               <h1
                 className="font-display font-semibold tracking-tight text-slate-900 leading-[1.12] mb-6"
                 style={{ fontSize: 'clamp(2.25rem, 3.8vw, 3.5rem)' }}
               >
-                {UI_COPY.hero.headline[lang]}
+                {siteContent.hero.headline[lang]}
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl mb-8">
-                {UI_COPY.hero.subheadline[lang]}
+                {siteContent.hero.subheadline[lang]}
               </p>
 
               <div className="flex flex-wrap items-center gap-4">
+                <a
+                  href="#training"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#991B1B]"
+                >
+                  <span>{siteContent.hero.primaryCta[lang]}</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </a>
+
                 <button
                   type="button"
-                  onClick={onOpenCongress}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#991B1B] hover:bg-[#7F1D1D] rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#991B1B]"
+                  onClick={onOpenPaymentPortal}
+                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-slate-800 bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
                 >
-                  <span>{UI_COPY.hero.primaryCta[lang]}</span>
-                  <ArrowUpRight className="w-4 h-4" />
+                  {siteContent.hero.secondaryCta[lang]}
                 </button>
-
-                <a
-                  href="#guidelines"
-                  className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-slate-800 bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
-                >
-                  {UI_COPY.hero.secondaryCta[lang]}
-                </a>
               </div>
             </div>
 
@@ -67,8 +70,8 @@ export function HeroSection({
                 <ShieldCheck className="w-4 h-4 text-[#065F46]" />
                 <span>
                   {lang === 'en'
-                    ? 'Verify NCPR Life-Support Certificate'
-                    : 'التحقق من شهادة الإنعاش القلبي NCPR'}
+                    ? 'Verify Simulation Educator Credential'
+                    : 'التحقق من شهادة ممارس المحاكاة الصحية'}
                 </span>
               </button>
 
@@ -87,18 +90,18 @@ export function HeroSection({
           <div className="lg:col-span-6 flex flex-col">
             <div className="relative flex-1 min-h-[280px] lg:min-h-[420px] rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
               <ResilientImage
-                src={HERO_IMAGE}
+                src={siteContent.images.hero}
                 alt={
                   lang === 'en'
                     ? 'Cardiologists walking through a sunlit architectural medical research atrium in Riyadh'
                     : 'أطباء قلب يسيرون في بهو طبي حديث مضاء بأشعة الشمس في الرياض'
                 }
-                fallbackTitle={UI_COPY.brand[lang]}
+                fallbackTitle={siteContent.brand[lang]}
                 className="w-full h-full lg:h-full object-cover"
               />
             </div>
             <p className="mt-2.5 text-xs text-slate-500 italic">
-              {UI_COPY.hero.imageCaption[lang]}
+              {siteContent.hero.imageCaption[lang]}
             </p>
           </div>
         </div>
@@ -108,8 +111,8 @@ export function HeroSection({
           id="about"
           className="mt-10 pt-8 border-t border-slate-200 grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
         >
-          {UI_COPY.hero.kpis.map((kpi) => (
-            <div key={kpi.value} className="space-y-1">
+          {siteContent.hero.kpis.map((kpi, idx) => (
+            <div key={idx} className="space-y-1">
               <div className="font-mono text-2xl sm:text-3xl font-medium tracking-tight text-slate-900 tabular-nums">
                 {kpi.value}
               </div>

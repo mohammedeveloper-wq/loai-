@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Language, UI_COPY } from '../data/shaData';
+import { SiteContentConfig } from '../lib/siteContentService';
 
 interface NavbarProps {
   lang: Language;
+  siteContent: SiteContentConfig;
   onOpenPortal: () => void;
 }
 
-export function Navbar({ lang, onOpenPortal }: NavbarProps) {
+export function Navbar({ lang, siteContent, onOpenPortal }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
@@ -26,7 +28,7 @@ export function Navbar({ lang, onOpenPortal }: NavbarProps) {
           href="#top"
           className="font-display text-lg sm:text-xl font-semibold tracking-tight text-slate-900 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#991B1B] rounded"
         >
-          {UI_COPY.brand[lang]}
+          {siteContent.brand[lang]}
         </a>
 
         {/* Zone 2: 5 concise single-line nav links */}
