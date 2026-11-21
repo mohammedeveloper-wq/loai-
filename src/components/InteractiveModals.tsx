@@ -17,7 +17,6 @@ import {
   Language,
   MEMBERSHIP_TIERS,
   MembershipTier,
-  SAMPLE_INVOICES,
   TRAINING_CENTERS,
   TRAINING_COURSES,
   TrainingCenter,
@@ -735,6 +734,12 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                     </button>
                   </div>
 
+                  <p className="text-xs text-amber-800 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    {lang === 'en'
+                      ? 'Payment processing is not connected yet. This form only records your registration and a pending payment reference. No card, Apple Pay, or SADAD payment will be collected.'
+                      : 'خدمة الدفع غير مفعلة حاليًا. يسجل النموذج طلب التسجيل ومرجع دفع معلق فقط، ولن يتم تحصيل أي مبلغ عبر البطاقة أو Apple Pay أو سداد.'}
+                  </p>
+
                   {paymentMethod === 'sadad' && (
                     <p className="text-xs text-slate-600 p-3 bg-[#FAF9F7] border border-slate-200 rounded-lg">
                       {lang === 'en'
@@ -801,23 +806,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                   <span>{isLookingUp ? '...' : lang === 'en' ? 'Lookup' : 'بحث'}</span>
                 </button>
               </div>
-              <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                <span>{lang === 'en' ? 'Samples:' : 'أمثلة:'}</span>
-                {SAMPLE_INVOICES.map((inv) => (
-                  <button
-                    key={inv.invoiceId}
-                    type="button"
-                    onClick={() => {
-                      setInvoiceQuery(inv.invoiceId);
-                      setLookedUpInvoice(inv);
-                      setInvoiceNotFound(false);
-                    }}
-                    className="font-mono text-slate-700 hover:text-[#991B1B] underline cursor-pointer"
-                  >
-                    {inv.invoiceId}
-                  </button>
-                ))}
-              </div>
+
             </form>
 
             {lookedUpInvoice && (
