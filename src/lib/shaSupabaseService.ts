@@ -1,4 +1,4 @@
-import { CERTIFICATE_REGISTRY, type CertificateRecord } from '../data/shaData';
+import type { CertificateRecord } from '../data/shaData';
 import { supabase } from './supabase';
 export interface MembershipApplicationPayload { tierId:string; fullName:string; scfhsId:string; institution:string; email:string; }
 export interface CongressRegistrationPayload { delegatePass:string; fullName:string; email:string; }
