@@ -196,58 +196,21 @@ export async function fetchSiteContent(): Promise<SiteContentConfig> {
   return DEFAULT_SITE_CONTENT;
 }
 
-export async function saveSiteContent(
-  config: SiteContentConfig
-): Promise<{ savedToSupabase: boolean }> {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(config));
-  } catch {
-    // Ignore storage quota errors
-  }
-
-  if (!supabase) {
-    return { savedToSupabase: false };
-  }
-
-  const { data: userData } = await supabase.auth.getUser();
-  const { error } = await supabase.from('site_content').upsert(
-    {
-      key: CONTENT_ROW_KEY,
-      value: config,
-      updated_at: new Date().toISOString(),
-      updated_by: userData.user?.id ?? null,
-    },
-    { onConflict: 'key' }
-  );
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
+export async function saveSiteContent(config: SiteContentConfig): Promise<{ savedToSupabase: boolean }> {
+  if (!supabase) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase.functions.invoke('sha-portal', { body: { action: 'site-content-save', value: config } });
+  if (error) throw new Error(error.message);
+  if (data?.error) throw new Error(data.error);
+  try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(config)); } catch { /* Ignore storage quota errors */ }
   return { savedToSupabase: true };
 }
 
 export async function resetSiteContent(): Promise<SiteContentConfig> {
-  try {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-  } catch {
-    // Ignore storage errors
-  }
-
-  if (supabase) {
-    const { error } = await supabase.from('site_content').upsert(
-      {
-        key: CONTENT_ROW_KEY,
-        value: DEFAULT_SITE_CONTENT,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'key' }
-    );
-    if (error) {
-      throw new Error(error.message);
-    }
-  }
-
+  if (!supabase) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase.functions.invoke('sha-portal', { body: { action: 'site-content-reset', value: DEFAULT_SITE_CONTENT } });
+  if (error) throw new Error(error.message);
+  if (data?.error) throw new Error(data.error);
+  try { localStorage.removeItem(LOCAL_STORAGE_KEY); } catch { /* Ignore storage errors */ }
   return DEFAULT_SITE_CONTENT;
 }
 
