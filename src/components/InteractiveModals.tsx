@@ -69,9 +69,6 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
 
   // Payment fields
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mada_card');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
 
   // Status & Receipt
   const [formError, setFormError] = useState('');
@@ -176,10 +173,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
   const vatSar = Number((taxableSar * 0.15).toFixed(2));
   const totalSar = Number((taxableSar + vatSar).toFixed(2));
 
-  const formatCardInput = (raw: string) => {
-    const digits = raw.replace(/\D/g, '').slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-  };
+
 
   const handleCheckoutSubmit = async (e: FormEvent) => {
     e.preventDefault();
