@@ -177,7 +177,7 @@ Deno.serve(async (req: Request) => {
       // No payment gateway is connected yet. Never report card or wallet payments as paid.
       const status = paymentMethod === "sadad" ? "Pending SADAD" : "Pending Payment";
       const methodLabel = paymentMethod === "sadad"
-        ? "SADAD Biller 904"
+        ? "SADAD (not connected)"
         : paymentMethod === "apple_pay" ? "Apple Pay" : "mada / Credit Card";
       const fullName = required(body.fullName, "Full name", 200);
       const { error } = await supabaseAdmin.from("payment_transactions").insert({
