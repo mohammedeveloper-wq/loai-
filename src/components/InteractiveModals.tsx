@@ -192,18 +192,6 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
       return;
     }
 
-    if (paymentMethod === 'mada_card') {
-      const cleanCard = cardNumber.replace(/\s+/g, '');
-      if (cleanCard.length < 12 || !cardExpiry.trim() || cardCvv.trim().length < 3) {
-        setFormError(
-          lang === 'en'
-            ? 'Please enter card number, expiry (MM/YY), and CVV—or choose SADAD / Apple Pay.'
-            : 'يرجى إدخال بيانات البطاقة كاملة أو اختيار الدفع عبر سداد / Apple Pay.'
-        );
-        return;
-      }
-    }
-
     setFormError('');
     setIsSubmitting(true);
 
@@ -712,7 +700,7 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                 {/* Payment Method Selector */}
                 <div className="space-y-3 pt-1">
                   <label className="block text-xs font-semibold text-slate-700">
-                    {lang === 'en' ? 'Payment Method' : 'وسيلة الدفع'}
+                    {lang === 'en' ? 'Payment Method (not connected yet)' : 'وسيلة الدفع (غير مفعلة بعد)'}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
@@ -753,52 +741,11 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                     </button>
                   </div>
 
-                  {paymentMethod === 'mada_card' && (
-                    <div className="grid grid-cols-12 gap-3 p-3.5 bg-[#FAF9F7] border border-slate-200 rounded-lg">
-                      <div className="col-span-12 sm:col-span-6">
-                        <label className="block text-[11px] font-medium text-slate-600 mb-1">
-                          {lang === 'en' ? 'Card Number' : 'رقم البطاقة'}
-                        </label>
-                        <input
-                          type="text"
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(formatCardInput(e.target.value))}
-                          placeholder="4578 •••• •••• 1124"
-                          className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-md"
-                        />
-                      </div>
-                      <div className="col-span-6 sm:col-span-3">
-                        <label className="block text-[11px] font-medium text-slate-600 mb-1">
-                          {lang === 'en' ? 'Expiry' : 'الانتهاء'}
-                        </label>
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value.slice(0, 5))}
-                          placeholder="08/29"
-                          className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-md"
-                        />
-                      </div>
-                      <div className="col-span-6 sm:col-span-3">
-                        <label className="block text-[11px] font-medium text-slate-600 mb-1">
-                          CVV
-                        </label>
-                        <input
-                          type="password"
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          placeholder="•••"
-                          className="w-full px-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-md"
-                        />
-                      </div>
-                    </div>
-                  )}
-
                   {paymentMethod === 'sadad' && (
                     <p className="text-xs text-slate-600 p-3 bg-[#FAF9F7] border border-slate-200 rounded-lg">
                       {lang === 'en'
-                        ? 'Generates an official SADAD Biller 904 invoice number valid for 48 hours for personal banking or hospital finance settlement.'
-                        : 'يتم إصدار رقم فاتورة سداد رسمي (رمز المفوتر ٩٠٤) صالح لمدة ٤٨ ساعة للسداد الفردي أو المؤسسي.'}
+                        ? 'SADAD payment integration is not connected yet. This request will be recorded as pending and no payment will be collected.'
+                        : 'خدمة سداد غير مربوطة حاليًا. سيتم تسجيل الطلب كعملية معلقة ولن يتم تحصيل أي مبلغ.'}
                     </p>
                   )}
                 </div>
@@ -824,11 +771,11 @@ export function InteractiveModals({ modal, lang, onClose }: InteractiveModalsPro
                         : 'جاري التنفيذ...'
                       : paymentMethod === 'sadad'
                       ? lang === 'en'
-                        ? `Generate SADAD Invoice (${totalSar.toFixed(2)} SAR)`
-                        : `إصدار فاتورة سداد (${totalSar.toFixed(2)} ريال)`
+                        ? `Submit Registration — Payment Pending (${totalSar.toFixed(2)} SAR)`
+                        : `تسجيل الطلب — الدفع معلق (${totalSar.toFixed(2)} ريال)`
                       : lang === 'en'
-                      ? `Pay ${totalSar.toFixed(2)} SAR & Register`
-                      : `دفع ${totalSar.toFixed(2)} ريال وإتمام التسجيل`}
+                      ? `Submit Registration — Payment Pending (${totalSar.toFixed(2)} SAR)`
+                      : `تسجيل الطلب — الدفع معلق (${totalSar.toFixed(2)} ريال)`}
                   </button>
                 </div>
               </form>
