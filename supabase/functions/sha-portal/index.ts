@@ -26,7 +26,7 @@ function email(value: unknown): string {
 }
 
 function reference(prefix: string): string {
-  const random = crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase();
+  const random = crypto.randomUUID().replaceAll("-", "").slice(0, 24).toUpperCase();
   return `${prefix}-${new Date().getUTCFullYear()}-${random}`;
 }
 
